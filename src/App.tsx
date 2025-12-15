@@ -1,19 +1,21 @@
 // src/App.tsx
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import AuthCallback from "./pages/AuthCallback";
 import ProtectedRoute from "./components/ProtectedRoutes";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public route */}
+        {/* Public */}
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
-        {/* Protected Dashboard */}
+        {/* Protected */}
         <Route
           path="/dashboard"
           element={
@@ -23,11 +25,18 @@ function App() {
           }
         />
 
-        {/* Redirect root to dashboard */}
+        {/* Default */}
         <Route
           path="/"
-          element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

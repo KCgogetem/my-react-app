@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
-import { getCurrentUser, signOut } from "aws-amplify/auth";
+import { fetchAuthSession, signOut } from "aws-amplify/auth";
 import {
   AppBar,
   Toolbar,
@@ -11,21 +11,164 @@ import {
   Paper,
   Button,
   Stack,
+  Tooltip,
+  Divider,
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddHomeWorkIcon from "@mui/icons-material/AddHomeWork";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ApiIcon from "@mui/icons-material/Api";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import PostAddIcon from "@mui/icons-material/PostAdd";
+import SaveIcon from "@mui/icons-material/Save";
+
+const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
 
 export default function Dashboard() {
   const [email, setEmail] = useState<string>("");
+  const [lastStatus, setLastStatus] = useState<number | null>(null);
+  const [lastBody, setLastBody] = useState<string>("");
 
   useEffect(() => {
-    getCurrentUser().then((user: any) => {
-      setEmail(user?.signInDetails?.loginId ?? "");
-    });
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const claims: any = session.tokens?.idToken?.payload;
+        setEmail(claims?.email ?? "");
+      } catch (err) {
+        console.error("Error loading session:", err);
+      }
+    })();
   }, []);
 
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    await signOut();
+    window.location.href = "/login";
+  };
+
+  const getAccessToken = async (): Promise<string> => {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    if (!token) throw new Error("No access token found. Are you logged in?");
+    return token;
+  };
+
+  const copyAccessToken = async () => {
+    try {
+      const token = await getAccessToken();
+      await navigator.clipboard.writeText(token);
+      alert("Access token copied to clipboard!");
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message ?? "Failed to copy token");
+    }
+  };
+
+  const callApi = async (path: string, options?: RequestInit) => {
+    try {
+      setLastStatus(null);
+      setLastBody("");
+
+      const token = await getAccessToken();
+
+      const res = await fetch(`${API_BASE}${path}`, {
+        ...(options ?? {}),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          ...(options?.headers ?? {}),
+        },
+      });
+
+      const text = await res.text(); // don't assume JSON
+      setLastStatus(res.status);
+      setLastBody(text);
+
+      console.log(`${options?.method ?? "GET"} ${path} status:`, res.status);
+      console.log(`${options?.method ?? "GET"} ${path} body:`, text);
+
+      alert(`${options?.method ?? "GET"} ${path} → ${res.status} (see console)`);
+    } catch (err: any) {
+      console.error("API call failed:", err);
+      setLastStatus(null);
+      setLastBody(String(err?.message ?? err));
+      alert(`API call failed: ${err?.message ?? err}`);
+    }
+  };
+
+  const debugJwtMeta = async () => {
+    const session = await fetchAuthSession();
+    const p: any = session.tokens?.idToken?.payload;
+
+    console.log("JWT META", {
+      token_use: p?.token_use,
+      aud: p?.aud,
+      iss: p?.iss,
+      exp: p?.exp,
+    });
+  };
+
+  const testMeEndpoint = async () => {
+    await debugJwtMeta();
+    await callApi("/me", { method: "GET" });
+  };
+
+  const createTestCma = async () => {
+    await callApi("/cmas", {
+      method: "POST",
+      body: JSON.stringify({
+        status: "draft",
+        subject: { address: "1821 Killarney Dr, Winter Park, FL 32789" },
+        comps: [],
+      }),
+    });
+  };
+
+  const listCmas = async () => {
+    await callApi("/cmas", { method: "GET" });
+  };
+
+  const saveTestProfile = async () => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString(); // use idToken (your authorizer accepts it)
+      if (!token) return alert("No id token found.");
+
+      const res = await fetch(`${API_BASE}/users/me`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: "Test",
+          lastName: "User",
+          email, // uses the email already shown in your header
+          phoneNumber: "+14075551234",
+          brokerageName: "Example Realty",
+          brokerageId: "BRK#001",
+          mlsUsername: "test.mls",
+          mlsPassword: "TempMLS!12345", // ✅ will go to Secrets Manager
+          businessName: "AI CMA Portal LLC",
+          timezone: "America/New_York",
+          businessAddress: {
+            street1: "123 Main St",
+            street2: "Suite 200",
+            city: "Winter Park",
+            state: "FL",
+            zip: "32789",
+          },
+        }),
+      });
+
+      const text = await res.text();
+      console.log("PUT /users/me status:", res.status);
+      console.log("PUT /users/me body:", text);
+      alert(`PUT /users/me → ${res.status} (see console)`);
+    } catch (err: any) {
+      console.error("PUT /users/me failed:", err);
+      alert(`PUT /users/me failed: ${err?.message ?? err}`);
+    }
   };
 
   return (
@@ -35,15 +178,49 @@ export default function Dashboard() {
           <Typography variant="h6" fontWeight={600}>
             AI CMA Dashboard
           </Typography>
-          <Stack direction="row" spacing={2} alignItems="center">
+
+          <Stack direction="row" spacing={1} alignItems="center">
             {email && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
                 {email}
               </Typography>
             )}
-            <IconButton color="inherit" onClick={handleLogout}>
-              <LogoutIcon />
-            </IconButton>
+
+            <Tooltip title="Test GET /me">
+              <IconButton color="inherit" onClick={testMeEndpoint} aria-label="test-me-endpoint">
+                <ApiIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Create test CMA (POST /cmas)">
+              <IconButton color="inherit" onClick={createTestCma} aria-label="create-test-cma">
+                <PostAddIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="List CMAs (GET /cmas)">
+              <IconButton color="inherit" onClick={listCmas} aria-label="list-cmas">
+                <ListAltIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Save test profile (PUT /users/me)">
+              <IconButton color="inherit" onClick={saveTestProfile} aria-label="save-test-profile">
+                <SaveIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Copy access token (dev)">
+              <IconButton color="inherit" onClick={copyAccessToken} aria-label="copy-access-token">
+                <ContentCopyIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Sign out">
+              <IconButton color="inherit" onClick={handleLogout} aria-label="logout">
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
           </Stack>
         </Toolbar>
       </AppBar>
@@ -75,6 +252,7 @@ export default function Dashboard() {
               variant="contained"
               startIcon={<AddHomeWorkIcon />}
               sx={{ textTransform: "none", fontWeight: 600 }}
+              onClick={createTestCma} // dev convenience
             >
               New CMA
             </Button>
@@ -82,10 +260,43 @@ export default function Dashboard() {
 
           <Paper elevation={1} sx={{ p: 3, borderRadius: 4 }}>
             <Typography variant="h6" fontWeight={600} gutterBottom>
+              Backend Test Panel (DEV)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Use the icons in the top bar to hit <code>/me</code> and <code>/cmas</code>. Results appear below.
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="subtitle2" fontWeight={700}>
+              Last API Result
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Status: {lastStatus ?? "—"}
+            </Typography>
+
+            <pre
+              style={{
+                marginTop: 12,
+                padding: 12,
+                borderRadius: 12,
+                background: "rgba(0,0,0,0.04)",
+                overflowX: "auto",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {lastBody || "—"}
+            </pre>
+          </Paper>
+
+          <Paper elevation={1} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
               Recent CMAs
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              We&apos;ll list your recent CMAs here once we wire up the backend.
+              We&apos;ll replace this section with a real list once the backend routes are confirmed.
+              For now, click the list icon (GET /cmas).
             </Typography>
           </Paper>
         </Stack>
