@@ -10,16 +10,23 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public route */}
         <Route path="/login" element={<Login />} />
 
-        {/* Protected route */}
+        {/* Protected Dashboard */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
           }
+        />
+
+        {/* Redirect root to dashboard */}
+        <Route
+          path="/"
+          element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
         />
       </Routes>
     </BrowserRouter>
