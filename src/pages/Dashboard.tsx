@@ -14,13 +14,7 @@ import {
   Tooltip,
   Divider,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import AddHomeWorkIcon from "@mui/icons-material/AddHomeWork";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ApiIcon from "@mui/icons-material/Api";
-import ListAltIcon from "@mui/icons-material/ListAlt";
-import PostAddIcon from "@mui/icons-material/PostAdd";
-import SaveIcon from "@mui/icons-material/Save";
+import Icon from "@mui/material/Icon";
 
 const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
 
@@ -188,37 +182,37 @@ export default function Dashboard() {
 
             <Tooltip title="Test GET /me">
               <IconButton color="inherit" onClick={testMeEndpoint} aria-label="test-me-endpoint">
-                <ApiIcon />
+                <Icon>api</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Create test CMA (POST /cmas)">
               <IconButton color="inherit" onClick={createTestCma} aria-label="create-test-cma">
-                <PostAddIcon />
+                <Icon>post_add</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="List CMAs (GET /cmas)">
               <IconButton color="inherit" onClick={listCmas} aria-label="list-cmas">
-                <ListAltIcon />
+                <Icon>list_alt</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Save test profile (PUT /users/me)">
               <IconButton color="inherit" onClick={saveTestProfile} aria-label="save-test-profile">
-                <SaveIcon />
+                <Icon>save</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Copy access token (dev)">
               <IconButton color="inherit" onClick={copyAccessToken} aria-label="copy-access-token">
-                <ContentCopyIcon />
+                <Icon>content_copy</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Sign out">
               <IconButton color="inherit" onClick={handleLogout} aria-label="logout">
-                <LogoutIcon />
+                <Icon>logout</Icon>
               </IconButton>
             </Tooltip>
           </Stack>
@@ -250,7 +244,7 @@ export default function Dashboard() {
 
             <Button
               variant="contained"
-              startIcon={<AddHomeWorkIcon />}
+              startIcon={<Icon>home_work</Icon>}
               sx={{ textTransform: "none", fontWeight: 600 }}
               onClick={createTestCma} // dev convenience
             >
