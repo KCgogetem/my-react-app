@@ -13,49 +13,22 @@ import {
   Stack,
   Tooltip,
   Divider,
-  Alert,
-
 } from "@mui/material";
 import Icon from "@mui/material/Icon";
-import TestButton from "../components/TestButton";
+import NewCmaModal from "../components/NewCmaModal";
 import { useNavigate } from "react-router-dom";
 
+// ...existing code...
 export default function Dashboard() {
+  const [cmaModalOpen, setCmaModalOpen] = useState(false);
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [lastStatus, setLastStatus] = useState<number | null>(null);
   const [lastBody, setLastBody] = useState<string>("");
 
-  // Test Users Endpoint state and handler
-  const [testUsersResult, setTestUsersResult] = useState<string | null>(null);
-  const [testUsersError, setTestUsersError] = useState<string | null>(null);
-  const [testUsersLoading, setTestUsersLoading] = useState(false);
+  const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
 
-  const handleTestUsers = async () => {
-    setTestUsersResult(null);
-    setTestUsersError(null);
-    setTestUsersLoading(true);
-    try {
-      let status = '';
-      let body = '';
-      const session = await import("aws-amplify/auth").then(m => m.fetchAuthSession());
-      const token = (await session).tokens?.idToken?.toString();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users?limit=25`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      status = `status: ${res.status}`;
-      body = await res.text();
-      setTestUsersResult(`${status}\n${body}`);
-    } catch (err: any) {
-      setTestUsersError(err?.message || 'Error testing users endpoint');
-    } finally {
-      setTestUsersLoading(false);
-    }
-  };
-
-
-const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
-
+  // Existing effect: loads email from idToken
   useEffect(() => {
     (async () => {
       try {
@@ -68,6 +41,26 @@ const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
     })();
   }, []);
 
+  // ✅ NEW: Debug groups in both tokens (Admins check)
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const idGroups = session.tokens?.idToken?.payload?.["cognito:groups"];
+        const accessGroups = session.tokens?.accessToken?.payload?.["cognito:groups"];
+
+        console.log("ID TOKEN groups:", idGroups);
+        console.log("ACCESS TOKEN groups:", accessGroups);
+
+        // Optional: show token_use to confirm which token you’re sending
+        console.log("token_use (idToken):", session.tokens?.idToken?.payload?.token_use);
+        console.log("token_use (accessToken):", session.tokens?.accessToken?.payload?.token_use);
+      } catch (err) {
+        console.error("Error reading groups from tokens:", err);
+      }
+    })();
+  }, []);
+
   const handleLogout = async () => {
     await signOut();
     window.location.href = "/login";
@@ -75,20 +68,9 @@ const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
 
   const getAccessToken = async (): Promise<string> => {
     const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
+    const token = session.tokens?.idToken?.toString(); // currently using idToken
     if (!token) throw new Error("No access token found. Are you logged in?");
     return token;
-  };
-
-  const copyAccessToken = async () => {
-    try {
-      const token = await getAccessToken();
-      await navigator.clipboard.writeText(token);
-      alert("Access token copied to clipboard!");
-    } catch (err: any) {
-      console.error(err);
-      alert(err?.message ?? "Failed to copy token");
-    }
   };
 
   const callApi = async (path: string, options?: RequestInit) => {
@@ -214,31 +196,51 @@ const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
             )}
 
             <Tooltip title="Test GET /me">
-              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={testMeEndpoint} aria-label="test-me-endpoint">
+              <IconButton
+                sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
+                onClick={testMeEndpoint}
+                aria-label="test-me-endpoint"
+              >
                 <Icon>api</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Create test CMA (POST /cmas)">
-              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={createTestCma} aria-label="create-test-cma">
+              <IconButton
+                sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
+                onClick={createTestCma}
+                aria-label="create-test-cma"
+              >
                 <Icon>post_add</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="List CMAs (GET /cmas)">
-              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={listCmas} aria-label="list-cmas">
+              <IconButton
+                sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
+                onClick={listCmas}
+                aria-label="list-cmas"
+              >
                 <Icon>list_alt</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Save test profile (PUT /users/me)">
-              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={saveTestProfile} aria-label="save-test-profile">
+              <IconButton
+                sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
+                onClick={saveTestProfile}
+                aria-label="save-test-profile"
+              >
                 <Icon>save</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Sign out">
-              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={handleLogout} aria-label="logout">
+              <IconButton
+                sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
+                onClick={handleLogout}
+                aria-label="logout"
+              >
                 <Icon>logout</Icon>
               </IconButton>
             </Tooltip>
@@ -269,41 +271,41 @@ const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
               <Button
                 variant="contained"
                 startIcon={<Icon>home_work</Icon>}
                 sx={{ textTransform: "none", fontWeight: 600 }}
-                onClick={createTestCma}
+                onClick={() => setCmaModalOpen(true)}
               >
                 New CMA
               </Button>
               <Button
-                variant="outlined"
-                startIcon={<Icon>people</Icon>}
-                sx={{ textTransform: "none", fontWeight: 600 }}
-                onClick={handleTestUsers}
-                disabled={testUsersLoading}
-              >
-                {testUsersLoading ? 'Testing...' : 'Test Users Endpoint'}
-              </Button>
-              <Button
                 variant="contained"
                 startIcon={<Icon>group</Icon>}
-                sx={{ bgcolor: 'secondary.main', color: 'white', fontWeight: 600, '&:hover': { bgcolor: 'secondary.dark' } }}
-                onClick={() => navigate('/users')}
+                sx={{ bgcolor: "secondary.main", color: "white", fontWeight: 600, "&:hover": { bgcolor: "secondary.dark" } }}
+                onClick={() => navigate("/users")}
               >
                 Users
               </Button>
-              <TestButton />
             </Box>
           </Paper>
-          {testUsersResult && (
-            <Alert severity="success" sx={{ my: 2, whiteSpace: 'pre-wrap' }}>{testUsersResult}</Alert>
-          )}
-          {testUsersError && (
-            <Alert severity="error" sx={{ my: 2 }}>{testUsersError}</Alert>
-          )}
+
+          <NewCmaModal
+            open={cmaModalOpen}
+            onClose={() => setCmaModalOpen(false)}
+            onSuccess={async (address: string) => {
+              setCmaModalOpen(false);
+              await callApi("/cmas", {
+                method: "POST",
+                body: JSON.stringify({
+                  status: "draft",
+                  subject: { address },
+                  comps: [],
+                }),
+              });
+            }}
+          />
 
           <Paper elevation={1} sx={{ p: 3, borderRadius: 4 }}>
             <Typography variant="h6" fontWeight={600} gutterBottom>
@@ -342,8 +344,7 @@ const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
               Recent CMAs
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              We&apos;ll replace this section with a real list once the backend routes are confirmed.
-              For now, click the list icon (GET /cmas).
+              We&apos;ll replace this section with a real list once the backend routes are confirmed. For now, click the list icon (GET /cmas).
             </Typography>
           </Paper>
         </Stack>
