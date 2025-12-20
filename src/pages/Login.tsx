@@ -15,9 +15,12 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from '../components/ForgotPassword';
+import ChangePassword from '../components/ChangePassword';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../components/CustomIcons';
+import { SitemarkIcon } from '../components/CustomIcons';
+import { signIn } from 'aws-amplify/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -67,25 +70,43 @@ export default function Login(props: { disableCustomTheme?: boolean }) {
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showChangePassword, setShowChangePassword] = React.useState(false);
+  const [loginError, setLoginError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
+
+  const handleTogglePassword = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
+    setShowChangePassword(true);
   };
 
   const handleClose = () => {
     setOpen(false);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoginError(null);
     if (emailError || passwordError) {
-      event.preventDefault();
       return;
     }
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const email = String(data.get('email'));
+    const password = String(data.get('password'));
+    setLoading(true);
+    try {
+      await signIn({ username: email, password });
+      navigate('/dashboard', { replace: true });
+    } catch (err: any) {
+      setLoginError(err.message || 'Login failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const validateInputs = () => {
@@ -159,73 +180,74 @@ export default function Login(props: { disableCustomTheme?: boolean }) {
             </FormControl>
             <FormControl>
               <FormLabel htmlFor="password">Password</FormLabel>
-              <TextField
-                error={passwordError}
-                helperText={passwordErrorMessage}
-                name="password"
-                placeholder="••••••"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                autoFocus
-                required
-                fullWidth
-                variant="outlined"
-                color={passwordError ? 'error' : 'primary'}
-              />
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  error={passwordError}
+                  helperText={passwordErrorMessage}
+                  name="password"
+                  placeholder="••••••"
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  autoComplete="current-password"
+                  autoFocus
+                  required
+                  fullWidth
+                  variant="outlined"
+                  color={passwordError ? 'error' : 'primary'}
+                />
+                <Button
+                  onClick={handleTogglePassword}
+                  sx={{ position: 'absolute', right: 8, top: 8, minWidth: 0, padding: '4px 8px', zIndex: 1 }}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </Button>
+              </Box>
             </FormControl>
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
+            <Button
+              variant="text"
+              onClick={handleClickOpen}
+              sx={{ alignSelf: 'flex-end', mb: 1 }}
+            >
+              Forgot Password?
+            </Button>
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
               variant="contained"
+              disabled={loading}
               onClick={validateInputs}
             >
-              Sign in
+              {loading ? 'Signing in...' : 'Sign in'}
             </Button>
+            {loginError && (
+              <Box sx={{ mt: 2 }}>
+                <Typography color="error" variant="body2">{loginError}</Typography>
+              </Box>
+            )}
+            {showChangePassword && (
+              <>
+                <Divider sx={{ my: 2 }}>Change Password</Divider>
+                <ChangePassword />
+              </>
+            )}
+          </Box>
+          <Typography sx={{ textAlign: 'center', mt: 2 }}>
+            Don&apos;t have an account?{' '}
             <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
+              href="/material-ui/getting-started/templates/sign-in/"
               variant="body2"
               sx={{ alignSelf: 'center' }}
             >
-              Forgot your password?
+              Sign up
             </Link>
-          </Box>
-          <Divider>or</Divider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Google')}
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
-            </Button>
-            <Typography sx={{ textAlign: 'center' }}>
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/material-ui/getting-started/templates/sign-in/"
-                variant="body2"
-                sx={{ alignSelf: 'center' }}
-              >
-                Sign up
-              </Link>
-            </Typography>
-          </Box>
+          </Typography>
         </Card>
       </SignInContainer>
     </AppTheme>

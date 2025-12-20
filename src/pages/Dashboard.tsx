@@ -13,15 +13,48 @@ import {
   Stack,
   Tooltip,
   Divider,
+  Alert,
+
 } from "@mui/material";
 import Icon from "@mui/material/Icon";
-
-const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
+import TestButton from "../components/TestButton";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [lastStatus, setLastStatus] = useState<number | null>(null);
   const [lastBody, setLastBody] = useState<string>("");
+
+  // Test Users Endpoint state and handler
+  const [testUsersResult, setTestUsersResult] = useState<string | null>(null);
+  const [testUsersError, setTestUsersError] = useState<string | null>(null);
+  const [testUsersLoading, setTestUsersLoading] = useState(false);
+
+  const handleTestUsers = async () => {
+    setTestUsersResult(null);
+    setTestUsersError(null);
+    setTestUsersLoading(true);
+    try {
+      let status = '';
+      let body = '';
+      const session = await import("aws-amplify/auth").then(m => m.fetchAuthSession());
+      const token = (await session).tokens?.idToken?.toString();
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users?limit=25`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      status = `status: ${res.status}`;
+      body = await res.text();
+      setTestUsersResult(`${status}\n${body}`);
+    } catch (err: any) {
+      setTestUsersError(err?.message || 'Error testing users endpoint');
+    } finally {
+      setTestUsersLoading(false);
+    }
+  };
+
+
+const API_BASE = "https://tgzofi4q36.execute-api.us-east-1.amazonaws.com/DEV";
 
   useEffect(() => {
     (async () => {
@@ -181,37 +214,31 @@ export default function Dashboard() {
             )}
 
             <Tooltip title="Test GET /me">
-              <IconButton color="inherit" onClick={testMeEndpoint} aria-label="test-me-endpoint">
+              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={testMeEndpoint} aria-label="test-me-endpoint">
                 <Icon>api</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Create test CMA (POST /cmas)">
-              <IconButton color="inherit" onClick={createTestCma} aria-label="create-test-cma">
+              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={createTestCma} aria-label="create-test-cma">
                 <Icon>post_add</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="List CMAs (GET /cmas)">
-              <IconButton color="inherit" onClick={listCmas} aria-label="list-cmas">
+              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={listCmas} aria-label="list-cmas">
                 <Icon>list_alt</Icon>
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Save test profile (PUT /users/me)">
-              <IconButton color="inherit" onClick={saveTestProfile} aria-label="save-test-profile">
+              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={saveTestProfile} aria-label="save-test-profile">
                 <Icon>save</Icon>
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Copy access token (dev)">
-              <IconButton color="inherit" onClick={copyAccessToken} aria-label="copy-access-token">
-                <Icon>content_copy</Icon>
-              </IconButton>
-            </Tooltip>
-
             <Tooltip title="Sign out">
-              <IconButton color="inherit" onClick={handleLogout} aria-label="logout">
+              <IconButton sx={{ bgcolor: 'common.black', color: 'common.white', mx: 0.5, '&:hover': { bgcolor: 'grey.900' } }} onClick={handleLogout} aria-label="logout">
                 <Icon>logout</Icon>
               </IconButton>
             </Tooltip>
@@ -242,15 +269,41 @@ export default function Dashboard() {
               </Typography>
             </Box>
 
-            <Button
-              variant="contained"
-              startIcon={<Icon>home_work</Icon>}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-              onClick={createTestCma} // dev convenience
-            >
-              New CMA
-            </Button>
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<Icon>home_work</Icon>}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+                onClick={createTestCma}
+              >
+                New CMA
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<Icon>people</Icon>}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+                onClick={handleTestUsers}
+                disabled={testUsersLoading}
+              >
+                {testUsersLoading ? 'Testing...' : 'Test Users Endpoint'}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Icon>group</Icon>}
+                sx={{ bgcolor: 'secondary.main', color: 'white', fontWeight: 600, '&:hover': { bgcolor: 'secondary.dark' } }}
+                onClick={() => navigate('/users')}
+              >
+                Users
+              </Button>
+              <TestButton />
+            </Box>
           </Paper>
+          {testUsersResult && (
+            <Alert severity="success" sx={{ my: 2, whiteSpace: 'pre-wrap' }}>{testUsersResult}</Alert>
+          )}
+          {testUsersError && (
+            <Alert severity="error" sx={{ my: 2 }}>{testUsersError}</Alert>
+          )}
 
           <Paper elevation={1} sx={{ p: 3, borderRadius: 4 }}>
             <Typography variant="h6" fontWeight={600} gutterBottom>

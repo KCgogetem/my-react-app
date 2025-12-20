@@ -6,16 +6,18 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import ProtectedRoute from "./components/ProtectedRoutes";
+import Users from "./pages/Users";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
-        {/* Protected */}
+
+        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -24,19 +26,20 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Default */}
         <Route
-          path="/"
+          path="/users"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Users />
             </ProtectedRoute>
           }
         />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Root → dashboard */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+        {/* Catch-all → login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
