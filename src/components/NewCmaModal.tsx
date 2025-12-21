@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogTitle,
@@ -27,6 +28,7 @@ async function verifyAddress(address: string): Promise<{ formatted: string; vali
 }
 
 export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolean; onClose: () => void; onSuccess: (address: string) => void }) {
+  const navigate = useNavigate();
   const [address, setAddress] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolea
       setAddress("");
       setVerified(null);
       setError(null);
+      navigate("/new-cma");
     }
   };
 

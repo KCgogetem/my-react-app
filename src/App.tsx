@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import Users from "./pages/Users";
+import NewCMA from "./pages/NewCMA";
 
 function App() {
   return (
@@ -31,6 +32,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Users />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/new-cma"
+          element={
+            <ProtectedRoute>
+              <NewCMA />
             </ProtectedRoute>
           }
         />

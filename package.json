@@ -16,7 +16,9 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@mui/x-data-grid": "^8.22.1",
+    "@mui/x-date-pickers": "^8.22.1",
     "aws-amplify": "^6.15.8",
+    "dayjs": "^1.11.19",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5"
