@@ -1,0 +1,18 @@
+{
+  "status": "ok",
+  "request_id": "",
+  "subject": {
+    "formatted_address": "",
+    "county": null,
+    "state": null,
+    "lat": null,
+    "lng": null,
+    "zip": null
+  },
+  "property_appraiser": null,
+  "mls": null,
+  "valuation": null,
+  "html": null,
+  "warnings": [],
+  "errors": []
+}

@@ -13,9 +13,9 @@ import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon />, onClick: undefined },
+  { text: 'Home', icon: <HomeRoundedIcon />, onClick: (navigate: any) => navigate('/dashboard') },
   { text: 'Users', icon: <PeopleRoundedIcon />, onClick: (navigate: any) => navigate('/users') },
-  { text: 'Clients', icon: <PeopleRoundedIcon />, onClick: undefined },
+  { text: 'CMAs', icon: <AssignmentRoundedIcon />, onClick: (navigate: any) => navigate('/previous-cmas') },
   { text: 'Tasks', icon: <AssignmentRoundedIcon />, onClick: undefined },
 ];
 

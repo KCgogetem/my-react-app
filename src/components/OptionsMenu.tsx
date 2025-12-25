@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { signOut } from 'aws-amplify/auth';
 import { styled } from '@mui/material/styles';
 import Divider, { dividerClasses } from '@mui/material/Divider';
 import Menu from '@mui/material/Menu';
@@ -60,7 +61,15 @@ export default function OptionsMenu() {
         <MenuItem onClick={handleClose}>Settings</MenuItem>
         <Divider />
         <MenuItem
-          onClick={handleClose}
+          onClick={async () => {
+            handleClose();
+            try {
+              await signOut();
+              window.location.href = '/login';
+            } catch (err) {
+              // Optionally handle error
+            }
+          }}
           sx={{
             [`& .${listItemIconClasses.root}`]: {
               ml: 'auto',

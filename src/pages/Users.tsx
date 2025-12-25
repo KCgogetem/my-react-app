@@ -13,6 +13,10 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef } from "@mui/x-data-grid";
 import { fetchAuthSession } from "aws-amplify/auth";
+import AppTheme from "../shared-theme/AppTheme";
+import CssBaseline from "@mui/material/CssBaseline";
+import SideMenu from "../components/SideMenu";
+import Header from "../components/Header";
 
 type BusinessAddress = {
   street1?: string;
@@ -41,7 +45,7 @@ type User = {
 
 const API_BASE = import.meta.env.VITE_API_URL as string;
 
-async function authedFetch(input: RequestInfo, init: RequestInit = {}) {
+async function authedFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
   const session = await fetchAuthSession();
   const token = session.tokens?.idToken?.toString(); // if your authorizer expects accessToken, switch here
   if (!token) throw new Error("No idToken found (are you logged in?)");
@@ -56,10 +60,8 @@ async function authedFetch(input: RequestInfo, init: RequestInit = {}) {
 export default function Users() {
   const [rows, setRows] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<User | null>(null);
-
   // editable form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -147,54 +149,64 @@ export default function Users() {
   }, []);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
-          Users
-        </Typography>
-        <Button variant="outlined" onClick={() => loadUsers()}>
-          Refresh
-        </Button>
-      </Stack>
+    <AppTheme>
+      <CssBaseline enableColorScheme />
+      <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <SideMenu />
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Header />
+          <Box sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+              <Typography variant="h5" fontWeight={700}>
+                Users
+              </Typography>
+              <Button variant="outlined" onClick={() => loadUsers()}>
+                Refresh
+              </Button>
+            </Stack>
 
-      <Box sx={{ height: 560, width: "100%" }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          getRowId={(r: User) => r.userId}
-          onRowDoubleClick={(params: any) => openEditor(params.row as User)}
-          disableRowSelectionOnClick
-        />
-        <Typography variant="body2" sx={{ mt: 1, opacity: 0.7 }}>
-          Tip: double-click a row to edit.
-        </Typography>
+            <Box sx={{ height: 560, width: "100%" }}>
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                loading={loading}
+                getRowId={(r: User) => r.userId}
+                onRowDoubleClick={(params: any) => openEditor(params.row as User)}
+                disableRowSelectionOnClick
+              />
+              <Typography variant="body2" sx={{ mt: 1, opacity: 0.7 }}>
+                Tip: double-click a row to edit.
+              </Typography>
+            </Box>
+
+            <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogContent>
+                <Stack spacing={2} sx={{ mt: 1 }}>
+                  <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                  <TextField label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                  <TextField label="Phone" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                  <TextField label="Timezone" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+                  <TextField label="Brokerage name" value={brokerageName} onChange={(e) => setBrokerageName(e.target.value)} />
+                  <TextField label="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+                  <Stack direction="row" spacing={2}>
+                    <TextField label="City" fullWidth value={city} onChange={(e) => setCity(e.target.value)} />
+                    <TextField label="State" sx={{ width: 120 }} value={stateVal} onChange={(e) => setStateVal(e.target.value)} />
+                    <TextField label="ZIP" sx={{ width: 140 }} value={zip} onChange={(e) => setZip(e.target.value)} />
+                  </Stack>
+                </Stack>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setOpen(false)}>Cancel</Button>
+                <Button variant="contained" onClick={() => save()}>
+                  Save
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Box>
+        </Box>
       </Box>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Edit User</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            <TextField label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            <TextField label="Phone" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
-            <TextField label="Timezone" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-            <TextField label="Brokerage name" value={brokerageName} onChange={(e) => setBrokerageName(e.target.value)} />
-            <TextField label="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
-            <Stack direction="row" spacing={2}>
-              <TextField label="City" fullWidth value={city} onChange={(e) => setCity(e.target.value)} />
-              <TextField label="State" sx={{ width: 120 }} value={stateVal} onChange={(e) => setStateVal(e.target.value)} />
-              <TextField label="ZIP" sx={{ width: 140 }} value={zip} onChange={(e) => setZip(e.target.value)} />
-            </Stack>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={() => save()}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </AppTheme>
   );
 }

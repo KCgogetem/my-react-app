@@ -1,6 +1,12 @@
 // src/pages/AuthCallback.tsx
-import { useEffect, useState } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AppTheme from "../shared-theme/AppTheme";
+import CssBaseline from "@mui/material/CssBaseline";
+import Box from "@mui/material/Box";
+import SideMenu from "../components/SideMenu";
+import Header from "../components/Header";
 
 export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
@@ -25,19 +31,28 @@ export default function AuthCallback() {
     }
   }, [navigate]);
 
-  if (error) {
-    return (
-      <div style={{ padding: "2rem" }}>
-        <h2>Authentication error</h2>
-        <p>{error}</p>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>Processing sign-in...</h2>
-      <p>If you are not redirected automatically, please wait or return to the <a href="/login">login</a> page.</p>
-    </div>
+    <AppTheme>
+      <CssBaseline enableColorScheme />
+      <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <SideMenu />
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Header />
+          <Box sx={{ p: 4 }}>
+            {error ? (
+              <>
+                <h2>Authentication error</h2>
+                <p>{error}</p>
+              </>
+            ) : (
+              <>
+                <h2>Processing sign-in...</h2>
+                <p>If you are not redirected automatically, please wait or return to the <a href="/login">login</a> page.</p>
+              </>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </AppTheme>
   );
 }
