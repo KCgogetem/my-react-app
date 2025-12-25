@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { useVerifiedAddress } from "../lib/VerifiedAddressContext";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../lib/api";
 import {
   Dialog,
   DialogTitle,
@@ -33,6 +35,7 @@ export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolea
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verified, setVerified] = useState<string | null>(null);
+  const { setVerifiedAddress } = useVerifiedAddress();
 
   const handleVerify = async () => {
     setError(null);
@@ -54,6 +57,7 @@ export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolea
 
   const handleSubmit = () => {
     if (verified) {
+      setVerifiedAddress(verified); // Store in context
       onSuccess(verified);
       setAddress("");
       setVerified(null);

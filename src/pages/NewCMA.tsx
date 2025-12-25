@@ -13,6 +13,7 @@ import Stack from "@mui/material/Stack";
 
 import { fetchAuthSession } from "aws-amplify/auth";
 import { apiFetch } from "../lib/api"; // adjust if your path differs
+import { useVerifiedAddress } from "../lib/VerifiedAddressContext";
 
 const NewCMA: React.FC = () => {
   const navigate = useNavigate();
@@ -20,8 +21,9 @@ const NewCMA: React.FC = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  // Replace these with your real verified address fields (from Google)
-  const verifiedAddress = "123 Main St, Springfield, IL 62704";
+
+  // Use context for verified address
+  const { verifiedAddress } = useVerifiedAddress();
   const stateHint = "FL";     // TODO: set from address parsing
   const countyHint = "Seminole"; // TODO: set from your county resolver
 

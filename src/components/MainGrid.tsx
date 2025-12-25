@@ -88,13 +88,12 @@ export default function MainGrid() {
 
       console.log(`${options?.method ?? "GET"} ${path} status:`, res.status);
       console.log(`${options?.method ?? "GET"} ${path} body:`, text);
-
-      alert(`${options?.method ?? "GET"} ${path} → ${res.status} (see console)`);
+      // Removed alert popup for dev tools
     } catch (err: any) {
       console.error("API call failed:", err);
       setLastStatus(null);
       setLastBody(String(err?.message ?? err));
-      alert(`API call failed: ${err?.message ?? err}`);
+      // Removed alert popup for dev tools
     }
   };
 
@@ -179,15 +178,7 @@ export default function MainGrid() {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         {/* Removed email from header */}
         {/* Removed Test / get me button */}
-        <Tooltip title="Create test CMA (POST /cmas)">
-          <IconButton
-            sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
-            onClick={createTestCma}
-            aria-label="create-test-cma"
-          >
-            <Icon>post_add</Icon>
-          </IconButton>
-        </Tooltip>
+        {/* Removed 'Create test CMA' button */}
         <Tooltip title="List CMAs (GET /cmas)">
           <IconButton
             sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
@@ -197,15 +188,7 @@ export default function MainGrid() {
             <Icon>list_alt</Icon>
           </IconButton>
         </Tooltip>
-        <Tooltip title="Save test profile (PUT /users/me)">
-          <IconButton
-            sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
-            onClick={saveTestProfile}
-            aria-label="save-test-profile"
-          >
-            <Icon>save</Icon>
-          </IconButton>
-        </Tooltip>
+        {/* Removed 'Save test profile' button */}
         <Tooltip title="Sign out">
           <IconButton
             sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}

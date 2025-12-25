@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <ChartUserByCountry />
             <CustomizedDataGrid />
           </Box>
-          <HighlightedCard />
+          {/* Removed HighlightedCard (explore your data) */}
           {children}
         </Box>
       </Box>

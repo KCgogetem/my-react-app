@@ -169,18 +169,25 @@ const CmaResults: React.FC = () => {
               )}
 
               <Typography variant="h6" sx={{ mt: 4 }}>
-                Raw Record
+                Raw Results (JSON)
               </Typography>
               <Box
                 component="pre"
                 sx={{
                   mt: 1,
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: "grey.100",
-                  overflowX: "auto",
-                  fontSize: 12,
+                  p: 2.5,
+                  borderRadius: 3,
+                  bgcolor: theme => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                  color: theme => theme.palette.mode === 'dark' ? '#e0e0e0' : 'grey.900',
+                  overflowX: 'auto',
+                  fontSize: 14,
+                  fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  border: theme => `1px solid ${theme.palette.divider}`,
+                  boxShadow: theme => theme.shadows[1],
+                  maxHeight: 400,
+                  whiteSpace: 'pre',
                 }}
+                data-testid="raw-json-box"
               >
                 {JSON.stringify(data, null, 2)}
               </Box>
