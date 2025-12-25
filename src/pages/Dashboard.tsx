@@ -8,7 +8,6 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <MainGrid />
-      <MainGrid />
     </DashboardLayout>
   );
 }

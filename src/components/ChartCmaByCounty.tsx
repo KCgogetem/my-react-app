@@ -124,7 +124,14 @@ export default function ChartCmaByCounty() {
 	return (
 		<Card
 			variant="outlined"
-			sx={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}
+			sx={{
+				display: 'flex',
+				flexDirection: 'column',
+				gap: '8px',
+				flexGrow: 1,
+				maxWidth: 290, // About 10% bigger again
+				minWidth: 0,
+			}}
 		>
 			<CardContent>
 				<Typography component="h2" variant="subtitle2">
@@ -134,10 +141,10 @@ export default function ChartCmaByCounty() {
 					<PieChart
 						colors={colors}
 						margin={{
-							left: 80,
-							right: 80,
-							top: 80,
-							bottom: 80,
+							left: 65,
+							right: 65,
+							top: 65,
+							bottom: 65,
 						}}
 						series={[
 							{
@@ -148,8 +155,8 @@ export default function ChartCmaByCounty() {
 								highlightScope: { fade: 'global', highlight: 'item' },
 							},
 						]}
-						height={260}
-						width={260}
+						height={211}
+						width={211}
 						hideLegend
 					>
 						<PieCenterLabel primaryText="98.5K" secondaryText="Total" />
