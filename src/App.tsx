@@ -8,6 +8,7 @@ import AuthCallback from "./pages/AuthCallback";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import Users from "./pages/Users";
 import NewCMA from "./pages/NewCMA";
+import CmaResults from "./pages/CmaResults"; // ✅ add this
 
 function App() {
   return (
@@ -16,7 +17,6 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-
 
         {/* Protected routes */}
         <Route
@@ -41,6 +41,16 @@ function App() {
           element={
             <ProtectedRoute>
               <NewCMA />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ CMA Results route */}
+        <Route
+          path="/cmas/:requestId"
+          element={
+            <ProtectedRoute>
+              <CmaResults />
             </ProtectedRoute>
           }
         />
