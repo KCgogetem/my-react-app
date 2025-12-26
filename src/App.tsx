@@ -1,3 +1,12 @@
+import CmaList from "./pages/CmaList";
+        <Route
+          path="/cma-results"
+          element={
+            <ProtectedRoute>
+              <CmaList />
+            </ProtectedRoute>
+          }
+        />
 // src/App.tsx
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";

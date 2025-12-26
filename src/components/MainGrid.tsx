@@ -260,46 +260,9 @@ export default function MainGrid() {
             }}
           />
 
-          <Paper elevation={1} sx={{ p: 3, borderRadius: 4 }}>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Backend Test Panel (DEV)
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Use the icons in the top bar to hit <code>/me</code> and <code>/cmas</code>. Results appear below.
-            </Typography>
+          // ...existing code...
 
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="subtitle2" fontWeight={700}>
-              Last API Result
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Status: {lastStatus ?? "—"}
-            </Typography>
-
-            <pre
-              style={{
-                marginTop: 12,
-                padding: 12,
-                borderRadius: 12,
-                background: "rgba(0,0,0,0.04)",
-                overflowX: "auto",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              {lastBody || "—"}
-            </pre>
-          </Paper>
-
-          <Paper elevation={1} sx={{ p: 3, borderRadius: 4 }}>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Recent CMAs
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              We&apos;ll replace this section with a real list once the backend routes are confirmed. For now, click the list icon (GET /cmas).
-            </Typography>
-          </Paper>
+          // ...existing code...
         </Stack>
       </Container>
     </Box>
