@@ -4,12 +4,11 @@ import CustomDatePicker from './CustomDatePicker';
 import NavbarBreadcrumbs from './NavbarBreadcrumbs';
 import MenuButton from './MenuButton';
 import ColorModeIconDropdown from '../shared-theme/ColorModeIconDropdown';
-import Search from './Search';
-
 export default function Header() {
   return (
     <Stack
       direction="row"
+      spacing={2}
       sx={{
         display: { xs: 'none', md: 'flex' },
         width: '100%',
@@ -18,11 +17,9 @@ export default function Header() {
         maxWidth: { sm: '100%', md: '1700px' },
         pt: 1.5,
       }}
-      spacing={2}
     >
       <NavbarBreadcrumbs />
       <Stack direction="row" sx={{ gap: 1 }}>
-        <Search />
         <CustomDatePicker />
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />

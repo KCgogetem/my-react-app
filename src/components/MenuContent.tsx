@@ -16,7 +16,6 @@ import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 const mainListItems = [
   { text: 'Home', icon: <HomeRoundedIcon />, href: '/dashboard' },
   { text: 'Users', icon: <PeopleRoundedIcon />, href: '/users' },
-  { text: 'CMAs', icon: <AssignmentRoundedIcon />, href: '/cma-results' },
   { text: 'Tasks', icon: <AssignmentRoundedIcon />, href: '/tasks' },
 ];
 
@@ -45,12 +44,10 @@ export default function MenuContent() {
       <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <Link href={item.href} underline="none" color="inherit" sx={{ display: 'flex', width: '100%' }}>
-              <ListItemButton>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </Link>
+            <ListItemButton onClick={() => navigate(item.href)}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>

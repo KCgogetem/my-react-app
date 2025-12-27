@@ -176,11 +176,21 @@ export default function MainGrid() {
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {/* Email and quick actions */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        {/* Removed email from header */}
-        {/* Removed Test / get me button */}
-        {/* Removed 'Create test CMA' button */}
-        {/* Removed 'List CMAs' button */}
-        {/* Removed 'Save test profile' button */}
+        <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+          {email ? `Signed in as: ${email}` : ''}
+        </Typography>
+        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={testMeEndpoint}>
+          Test / get me
+        </Button>
+        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={createTestCma}>
+          Create test CMA
+        </Button>
+        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={listCmas}>
+          List CMAs
+        </Button>
+        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={saveTestProfile}>
+          Save test profile
+        </Button>
         <Tooltip title="Sign out">
           <IconButton
             sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
@@ -224,14 +234,7 @@ export default function MainGrid() {
               >
                 New CMA
               </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Icon>add_circle_outline</Icon>}
-                sx={{ fontWeight: 600 }}
-                onClick={() => navigate("/new-cma")}
-              >
-                Go to New CMA Page
-              </Button>
+              {/* Go to New CMA Page button removed */}
                 {/* Users button removed, now in sidebar */}
             </Box>
           </Paper>

@@ -8,11 +8,11 @@ import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import NewCMA from "./pages/NewCMA";
 import CmaList from "./pages/CmaList";
-import CmaResults from "./pages/CmaResults";
+// import CmaResults from "./pages/CmaResults";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import SignUpPage from "./pages/SignUpPage";
-  <Route path="/signup" element={<SignUpPage />} />
 import ProtectedRoute from "./components/ProtectedRoutes";
+import Feedback from "./pages/Feedback";
 
 function App() {
   return (
@@ -56,19 +56,27 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/cmas/:requestId"
           element={
             <ProtectedRoute>
               <CmaResults />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/privacy-policy"
           element={
             <ProtectedRoute>
               <PrivacyPolicy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feedback"
+          element={
+            <ProtectedRoute>
+              <Feedback />
             </ProtectedRoute>
           }
         />

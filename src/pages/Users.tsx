@@ -327,65 +327,69 @@ export default function Users() {
               <DialogContent>
                 {error && <Alert severity="error">{error}</Alert>}
                 <Stack spacing={2} sx={{ mt: 1 }}>
-                  {isNewInvite && (
-                    <TextField
-                      label="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoFocus
-                    />
-                  )}
 
-                  <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                  <TextField label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-
-                  <TextField
-                    label="Phone"
-                    value={phoneNumber}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                      setPhoneNumber(val);
-                    }}
-                    inputProps={{ maxLength: 10, inputMode: "numeric", pattern: "[0-9]{10}" }}
-                    error={phoneNumber.length > 0 && phoneNumber.length !== 10}
-                    helperText={
-                      phoneNumber.length > 0 && phoneNumber.length !== 10
-                        ? "Enter a valid 10-digit phone number"
-                        : ""
-                    }
-                    required
-                  />
-
-                  <TextField label="Timezone" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-
-                  <TextField label="Brokerage name" value={brokerageName} onChange={(e) => setBrokerageName(e.target.value)} required />
-                  <TextField label="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required />
-
-                  <Stack direction="row" spacing={2}>
-                    <TextField label="City" fullWidth value={city} onChange={(e) => setCity(e.target.value)} required />
-                    <FormControl sx={{ width: 160 }} required>
-                      <InputLabel id="state-select-label">State</InputLabel>
-                      <Select
-                        labelId="state-select-label"
-                        value={stateVal}
-                        label="State"
-                        onChange={(e) => setStateVal(e.target.value)}
+                  {/* Only show these fields for new user invite */}
+                  {isNewInvite ? (
+                    <>
+                      <TextField
+                        label="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
-                      >
-                        {US_STATES.map((s) => (
-                          <MenuItem key={s.code} value={s.code}>
-                            {s.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    <TextField label="ZIP" sx={{ width: 140 }} value={zip} onChange={(e) => setZip(e.target.value)} required />
-                  </Stack>
+                        autoFocus
+                      />
+                      <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                      <TextField label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                    </>
+                  ) : (
+                    <>
+                      <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                      <TextField label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                      <TextField
+                        label="Phone"
+                        value={phoneNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setPhoneNumber(val);
+                        }}
+                        inputProps={{ maxLength: 10, inputMode: "numeric", pattern: "[0-9]{10}" }}
+                        error={phoneNumber.length > 0 && phoneNumber.length !== 10}
+                        helperText={
+                          phoneNumber.length > 0 && phoneNumber.length !== 10
+                            ? "Enter a valid 10-digit phone number"
+                            : ""
+                        }
+                        required
+                      />
+                      <TextField label="Timezone" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+                      <TextField label="Brokerage name" value={brokerageName} onChange={(e) => setBrokerageName(e.target.value)} required />
+                      <TextField label="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required />
+                      <Stack direction="row" spacing={2}>
+                        <TextField label="City" fullWidth value={city} onChange={(e) => setCity(e.target.value)} required />
+                        <FormControl sx={{ width: 160 }} required>
+                          <InputLabel id="state-select-label">State</InputLabel>
+                          <Select
+                            labelId="state-select-label"
+                            value={stateVal}
+                            label="State"
+                            onChange={(e) => setStateVal(e.target.value)}
+                            required
+                          >
+                            {US_STATES.map((s) => (
+                              <MenuItem key={s.code} value={s.code}>
+                                {s.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <TextField label="ZIP" sx={{ width: 140 }} value={zip} onChange={(e) => setZip(e.target.value)} required />
+                      </Stack>
+                    </>
+                  )}
 
                   {isNewInvite && (
                     <Typography variant="body2" sx={{ opacity: 0.75 }}>
-                      This sends a Cognito invite email. The user will be written into DynamoDB after their first successful login.
+                      An email will be sent to the new user.
                     </Typography>
                   )}
                 </Stack>

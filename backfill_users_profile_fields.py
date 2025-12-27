@@ -17,7 +17,7 @@ DEFAULTS = {
     "businessCity": "",
     "businessState": "",
     "businessZip": "",
-    "profileComplete": False,
+    
 }
 
 # Only remove fields you are 100% sure are unwanted.

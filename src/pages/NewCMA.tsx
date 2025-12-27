@@ -60,39 +60,29 @@ const NewCMA: React.FC = () => {
       });
   }, []);
 
-  async function handleRunCma() {
+  const [cmaResult, setCmaResult] = useState<any>(null);
+  useEffect(() => {
+    if (!verifiedAddress) return;
     setRunError(null);
-
-    if (!verifiedAddress) {
-      setRunError("Missing verified address.");
-      return;
-    }
-
+    setCmaResult(null);
     setIsRunning(true);
-
-    // Use a stable ID so you can navigate + fetch later
     const requestId = `cma_${crypto.randomUUID()}`;
-
-    try {
-      const res = await apiFetch<{ status: string; request_id: string }>("/cmas", {
-        method: "POST",
-        body: JSON.stringify({
-          request_id: requestId,
-          formatted_address: verifiedAddress,
-          state_hint: stateHint,
-          county_hint: countyHint,
-        }),
-      });
-
-      // Navigate to a CMA results page (you’ll build this route next)
-      navigate(`/cmas/${res.request_id}`);
-    } catch (err: any) {
-      console.error("Run CMA failed:", err);
-      setRunError(err?.message || "Failed to start CMA");
-    } finally {
-      setIsRunning(false);
-    }
-  }
+    apiFetch<{ status: string; request_id: string; result?: any }>("/cmas", {
+      method: "POST",
+      body: JSON.stringify({
+        request_id: requestId,
+        formatted_address: verifiedAddress,
+        state_hint: stateHint,
+        county_hint: countyHint,
+      }),
+    })
+      .then(res => setCmaResult(res.result || res))
+      .catch(err => {
+        console.error("Run CMA failed:", err);
+        setRunError(err?.message || "Failed to start CMA");
+      })
+      .finally(() => setIsRunning(false));
+  }, [verifiedAddress]);
 
   return (
     <AppTheme>
@@ -102,12 +92,12 @@ const NewCMA: React.FC = () => {
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Header />
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "flex-start", minHeight: "80vh" }}>
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 4, maxWidth: 600, width: "100%", mt: 4 }}>
-              <Typography variant="h4" fontWeight={700} gutterBottom>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 4, maxWidth: 600, width: "100%", mt: 4, bgcolor: "grey.900", color: "common.white" }}>
+              <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: "common.white" }}>
                 New CMA
               </Typography>
 
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2, color: "grey.200" }}>
                 {userName && userEmail
                   ? `Signed in as: ${userName} (${userEmail})`
                   : userEmail
@@ -115,37 +105,44 @@ const NewCMA: React.FC = () => {
                   : "Identifying signed-in user..."}
               </Typography>
 
-              <Typography variant="subtitle1" color="text.primary" sx={{ mb: 1, fontWeight: 500 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500, color: "grey.100" }}>
                 Verified Address:
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              <Typography variant="body1" sx={{ mb: 3, color: "grey.200" }}>
                 {verifiedAddress}
               </Typography>
 
-              <Typography variant="body1" color="text.primary" sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2, color: "grey.100" }}>
                 Are you ready to run the new CMA, or would you like to provide additional info?
               </Typography>
 
               {runError && (
-                <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+                <Typography variant="body2" color="error" sx={{ mb: 2, color: "error.light" }}>
                   {runError}
                 </Typography>
               )}
 
               <Stack direction="row" spacing={2}>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   color="primary"
-                  onClick={handleRunCma}
                   disabled={isRunning}
                 >
-                  {isRunning ? "Running..." : "Run CMA"}
-                </Button>
-
-                <Button variant="outlined" color="primary">
                   Additional Info
                 </Button>
               </Stack>
+
+              {/* Display CMA results after running */}
+              {cmaResult && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "common.white" }}>
+                    CMA Results
+                  </Typography>
+                  <Paper sx={{ p: 2, bgcolor: "grey.800", color: "grey.100" }}>
+                    <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", color: "inherit" }}>{JSON.stringify(cmaResult, null, 2)}</pre>
+                  </Paper>
+                </Box>
+              )}
             </Paper>
           </Box>
         </Box>
