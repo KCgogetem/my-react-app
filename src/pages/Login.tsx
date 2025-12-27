@@ -165,7 +165,6 @@ export default function Login(props: { disableCustomTheme?: boolean }) {
         <ColorModeSelect sx={{ position: "fixed", top: "1rem", right: "1rem" }} />
 
         <Card variant="outlined">
-          <SitemarkIcon />
 
           <Typography component="h1" variant="h4" sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}>
             Sign in

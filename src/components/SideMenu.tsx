@@ -12,6 +12,7 @@ import MenuContent from './MenuContent';
 import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { apiFetch } from '../lib/api';
 
 const drawerWidth = 240;
 
@@ -33,11 +34,11 @@ export default function SideMenu() {
   useEffect(() => {
     (async () => {
       try {
-        const session = await fetchAuthSession();
-        const claims: any = session.tokens?.idToken?.payload;
-        const name = (claims?.name || ((claims?.given_name || "") + " " + (claims?.family_name || "")).trim()).trim();
-        setUserName(name || claims?.email?.split("@")[0] || "");
-        setUserEmail(claims?.email || "");
+        // Fetch user profile from /me endpoint
+        const data = await apiFetch<any>("/me", { method: "GET" });
+        const user = data?.user ?? data;
+        setUserName(user?.firstName || user?.name || "User");
+        setUserEmail(user?.email || "");
       } catch (err) {
         setUserName("");
         setUserEmail("");
@@ -58,11 +59,13 @@ export default function SideMenu() {
       <Box
         sx={{
           display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           mt: 'calc(var(--template-frame-height, 0px) + 4px)',
           p: 1.5,
         }}
       >
-        <SelectContent />
+        <img src="/cmpr-logo.png" alt="CMPR Logo" style={{ height: 40, width: 'auto' }} />
       </Box>
       <Divider />
       <Box

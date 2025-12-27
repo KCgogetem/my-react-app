@@ -24,7 +24,6 @@ export default function Header() {
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
         </MenuButton>
-        <ColorModeIconDropdown />
       </Stack>
     </Stack>
   );

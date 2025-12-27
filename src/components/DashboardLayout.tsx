@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 
 import SideMenu from "./SideMenu";
 import Header from "./Header";
-import ChartUserByCountry from "./ChartCmaByCounty";
+// import ChartUserByCountry from "./ChartCmaByCounty";
 import HighlightedCard from "./HighlightedCard";
 import CustomizedDataGrid from "./CustomizedDataGrid";
 
@@ -19,10 +19,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SideMenu />
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Header />
-          <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3 }}>
+          {/* <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3 }}>
             <ChartUserByCountry />
             <CustomizedDataGrid />
-          </Box>
+          </Box> */}
           {/* Removed HighlightedCard (explore your data) */}
           {children}
         </Box>

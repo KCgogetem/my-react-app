@@ -12,6 +12,10 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 
 // You need to set your Google Maps Geocoding API key in .env as VITE_GOOGLE_MAPS_API_KEY
@@ -29,12 +33,24 @@ async function verifyAddress(address: string): Promise<{ formatted: string; vali
   }
 }
 
-export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolean; onClose: () => void; onSuccess: (address: string) => void }) {
+const COUNTY_OPTIONS = [
+  "Seminole",
+  "Orange",
+  "Osceola",
+  "Lake",
+  "Volusia",
+  "Polk",
+  "Brevard",
+  "Other",
+];
+
+export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolean; onClose: () => void; onSuccess: (address: string, county: string) => void }) {
   const navigate = useNavigate();
   const [address, setAddress] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verified, setVerified] = useState<string | null>(null);
+  const [county, setCounty] = useState<string>(COUNTY_OPTIONS[0]);
   const { setVerifiedAddress } = useVerifiedAddress();
 
   const handleVerify = async () => {
@@ -58,10 +74,11 @@ export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolea
   const handleSubmit = () => {
     if (verified) {
       setVerifiedAddress(verified); // Store in context
-      onSuccess(verified);
+      onSuccess(verified, county);
       setAddress("");
       setVerified(null);
       setError(null);
+      setCounty(COUNTY_OPTIONS[0]);
       navigate("/new-cma");
     }
   };
@@ -86,6 +103,20 @@ export default function NewCmaModal({ open, onClose, onSuccess }: { open: boolea
             autoFocus
             disabled={verifying}
           />
+          <FormControl fullWidth>
+            <InputLabel id="county-label">County</InputLabel>
+            <Select
+              labelId="county-label"
+              value={county}
+              label="County"
+              onChange={e => setCounty(e.target.value)}
+              disabled={verifying}
+            >
+              {COUNTY_OPTIONS.map((c) => (
+                <MenuItem key={c} value={c}>{c}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Button onClick={handleVerify} variant="outlined" disabled={!address || verifying}>
             {verifying ? <CircularProgress size={20} /> : "Verify Address"}
           </Button>

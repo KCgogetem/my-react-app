@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { fetchAuthSession } from "aws-amplify/auth";
 
+
 import DashboardLayout from "../components/DashboardLayout";
 import MainGrid from "../components/MainGrid";
 import CompleteProfileModal from "../components/CompleteProfileModal";
+import ChartCmaByCounty from "../components/ChartCmaByCounty";
+import CustomizedDataGrid from "../components/CustomizedDataGrid";
 
 const API_BASE = import.meta.env.VITE_API_URL as string;
 
@@ -112,7 +115,15 @@ export default function Dashboard() {
         )}
 
         {/* Only show dashboard content after profile is complete */}
-        {!loadingMe && profileComplete && <MainGrid />}
+        {!loadingMe && profileComplete && (
+          <>
+            <MainGrid />
+            <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3 }}>
+              <ChartCmaByCounty />
+              <CustomizedDataGrid />
+            </Box>
+          </>
+        )}
       </Box>
     </DashboardLayout>
   );

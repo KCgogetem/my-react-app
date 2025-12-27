@@ -1,206 +1,28 @@
-import { useEffect, useState } from "react";
-import { fetchAuthSession, signOut } from "aws-amplify/auth";
+import { useState } from "react";
 import {
   Typography,
-  IconButton,
   Box,
   Container,
   Paper,
   Button,
   Stack,
-  Tooltip,
-  Divider,
 } from "@mui/material";
 import Icon from "@mui/material/Icon";
 import NewCmaModal from "../components/NewCmaModal";
-import { useNavigate } from "react-router-dom";
+import { startCmaPipeline } from "../api/cmaPipeline";
 
 export default function MainGrid() {
   const [cmaModalOpen, setCmaModalOpen] = useState(false);
-  const navigate = useNavigate();
-  const [email, setEmail] = useState<string>("");
-  const [lastStatus, setLastStatus] = useState<number | null>(null);
-  const [lastBody, setLastBody] = useState<string>("");
+  // Removed unused email state
 
-  const API_BASE = import.meta.env.VITE_API_URL as string;
+  // Removed unused email state and effect
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const session = await fetchAuthSession();
-        const claims: any = session.tokens?.idToken?.payload;
-        setEmail(claims?.email ?? "");
-      } catch (err) {
-        console.error("Error loading session:", err);
-      }
-    })();
-  }, []);
+  // Removed unused effect for token group debug
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const session = await fetchAuthSession();
-        const idGroups = session.tokens?.idToken?.payload?.["cognito:groups"];
-        const accessGroups = session.tokens?.accessToken?.payload?.["cognito:groups"];
 
-        console.log("ID TOKEN groups:", idGroups);
-        console.log("ACCESS TOKEN groups:", accessGroups);
-
-        console.log("token_use (idToken):", session.tokens?.idToken?.payload?.token_use);
-        console.log("token_use (accessToken):", session.tokens?.accessToken?.payload?.token_use);
-      } catch (err) {
-        console.error("Error reading groups from tokens:", err);
-      }
-    })();
-  }, []);
-
-  const handleLogout = async () => {
-    await signOut();
-    window.location.href = "/login";
-  };
-
-  const getAccessToken = async (): Promise<string> => {
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
-    if (!token) throw new Error("No access token found. Are you logged in?");
-    return token;
-  };
-
-  const callApi = async (path: string, options?: RequestInit) => {
-    try {
-      setLastStatus(null);
-      setLastBody("");
-
-      const token = await getAccessToken();
-
-      const res = await fetch(`${API_BASE}${path}`, {
-        ...(options ?? {}),
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          ...(options?.headers ?? {}),
-        },
-      });
-
-      const text = await res.text();
-      setLastStatus(res.status);
-      setLastBody(text);
-
-      console.log(`${options?.method ?? "GET"} ${path} status:`, res.status);
-      console.log(`${options?.method ?? "GET"} ${path} body:`, text);
-      // Removed alert popup for dev tools
-    } catch (err: any) {
-      console.error("API call failed:", err);
-      setLastStatus(null);
-      setLastBody(String(err?.message ?? err));
-      // Removed alert popup for dev tools
-    }
-  };
-
-  const debugJwtMeta = async () => {
-    const session = await fetchAuthSession();
-    const p: any = session.tokens?.idToken?.payload;
-
-    console.log("JWT META", {
-      token_use: p?.token_use,
-      aud: p?.aud,
-      iss: p?.iss,
-      exp: p?.exp,
-    });
-  };
-
-  const testMeEndpoint = async () => {
-    await debugJwtMeta();
-    await callApi("/me", { method: "GET" });
-  };
-
-  const createTestCma = async () => {
-    await callApi("/cmas", {
-      method: "POST",
-      body: JSON.stringify({
-        status: "draft",
-        subject: { address: "1821 Killarney Dr, Winter Park, FL 32789" },
-        comps: [],
-      }),
-    });
-  };
-
-  const listCmas = async () => {
-    await callApi("/cmas", { method: "GET" });
-  };
-
-  const saveTestProfile = async () => {
-    try {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.idToken?.toString();
-      if (!token) return alert("No id token found.");
-
-      const res = await fetch(`${API_BASE}/users/me`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName: "Test",
-          lastName: "User",
-          email,
-          phoneNumber: "+14075551234",
-          brokerageName: "Example Realty",
-          brokerageId: "BRK#001",
-          mlsUsername: "test.mls",
-          mlsPassword: "TempMLS!12345",
-          businessName: "AI CMA Portal LLC",
-          timezone: "America/New_York",
-          businessAddress: {
-            street1: "123 Main St",
-            street2: "Suite 200",
-            city: "Winter Park",
-            state: "FL",
-            zip: "32789",
-          },
-        }),
-      });
-
-      const text = await res.text();
-      console.log("PUT /users/me status:", res.status);
-      console.log("PUT /users/me body:", text);
-      alert(`PUT /users/me → ${res.status} (see console)`);
-    } catch (err: any) {
-      console.error("PUT /users/me failed:", err);
-      alert(`PUT /users/me failed: ${err?.message ?? err}`);
-    }
-  };
 
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
-      {/* Email and quick actions */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-          {email ? `Signed in as: ${email}` : ''}
-        </Typography>
-        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={testMeEndpoint}>
-          Test / get me
-        </Button>
-        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={createTestCma}>
-          Create test CMA
-        </Button>
-        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={listCmas}>
-          List CMAs
-        </Button>
-        <Button variant="outlined" size="small" sx={{ mr: 1 }} onClick={saveTestProfile}>
-          Save test profile
-        </Button>
-        <Tooltip title="Sign out">
-          <IconButton
-            sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
-            onClick={handleLogout}
-            aria-label="logout"
-          >
-            <Icon>logout</Icon>
-          </IconButton>
-        </Tooltip>
-      </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={3}>
@@ -242,22 +64,18 @@ export default function MainGrid() {
           <NewCmaModal
             open={cmaModalOpen}
             onClose={() => setCmaModalOpen(false)}
-            onSuccess={async (address: string) => {
-              setCmaModalOpen(false);
-              await callApi("/cmas", {
-                method: "POST",
-                body: JSON.stringify({
-                  status: "draft",
-                  subject: { address },
-                  comps: [],
-                }),
-              });
-            }}
+              onSuccess={async (formattedAddress: string) => {
+                setCmaModalOpen(false);
+                const result = await startCmaPipeline({
+                  formattedAddress,
+                  stateHint: "FL",
+                  countyHint: "Seminole", // if you know it
+                });
+                console.log("Pipeline started:", result);
+              }}
           />
 
-          // ...existing code...
-
-          // ...existing code...
+          {/* Other dashboard content goes here */}
         </Stack>
       </Container>
     </Box>
