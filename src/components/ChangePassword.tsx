@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, confirmSignIn } from 'aws-amplify/auth';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert } from '@mui/material';
 
 export default function ChangePassword() {
+  const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,14 +26,11 @@ export default function ChangePassword() {
     }
     setLoading(true);
     try {
-      // Use admin reset password flow (simulate)
-      // In real apps, this should be done via a backend or Cognito admin API
-      const session = await fetchAuthSession();
-      // You would call a backend API here to reset the password for the user
-      // For demo, just show success
+      await confirmSignIn({ challengeResponse: newPassword });
       setSuccess(true);
       setNewPassword('');
       setConfirmPassword('');
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       setError(err.message || 'Failed to update password.');
     } finally {

@@ -1,30 +1,26 @@
-import CmaList from "./pages/CmaList";
-        <Route
-          path="/cma-results"
-          element={
-            <ProtectedRoute>
-              <CmaList />
-            </ProtectedRoute>
-          }
-        />
 // src/App.tsx
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
-import ProtectedRoute from "./components/ProtectedRoutes";
+import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import NewCMA from "./pages/NewCMA";
-import CmaResults from "./pages/CmaResults"; // ✅ add this
+import CmaList from "./pages/CmaList";
+import CmaResults from "./pages/CmaResults";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import SignUpPage from "./pages/SignUpPage";
+  <Route path="/signup" element={<SignUpPage />} />
+import ProtectedRoute from "./components/ProtectedRoutes";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
+        {/* Public */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUpPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Protected routes */}
@@ -44,7 +40,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/new-cma"
           element={
@@ -53,8 +48,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* ✅ CMA Results route */}
+        <Route
+          path="/cma-results"
+          element={
+            <ProtectedRoute>
+              <CmaList />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/cmas/:requestId"
           element={
@@ -63,12 +64,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/privacy-policy"
+          element={
+            <ProtectedRoute>
+              <PrivacyPolicy />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Root → dashboard */}
+        {/* Defaults */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-        {/* Catch-all → login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );

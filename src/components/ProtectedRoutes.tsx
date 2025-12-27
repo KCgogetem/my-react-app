@@ -1,21 +1,21 @@
 // src/components/ProtectedRoute.tsx
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
-import { getCurrentUser } from "aws-amplify/auth";
 import { Navigate, useLocation } from "react-router-dom";
+import { fetchAuthSession } from "aws-amplify/auth";
 
-export default function ProtectedRoute({ children }: { children: ReactNode }) {
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState<boolean>(false);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
     let alive = true;
 
     (async () => {
       try {
-        await getCurrentUser();
-        if (alive) setAuthenticated(true);
+        const session = await fetchAuthSession();
+        const authed = !!session.tokens?.accessToken;
+        if (alive) setAuthenticated(authed);
       } catch {
         if (alive) setAuthenticated(false);
       } finally {
@@ -26,13 +26,10 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   if (loading) return <div>Loading...</div>;
-
-  if (!authenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
+  if (!authenticated) return <Navigate to="/login" replace state={{ from: location }} />;
 
   return <>{children}</>;
 }

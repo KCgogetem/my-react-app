@@ -179,15 +179,7 @@ export default function MainGrid() {
         {/* Removed email from header */}
         {/* Removed Test / get me button */}
         {/* Removed 'Create test CMA' button */}
-        <Tooltip title="List CMAs (GET /cmas)">
-          <IconButton
-            sx={{ bgcolor: "common.black", color: "common.white", mx: 0.5, "&:hover": { bgcolor: "grey.900" } }}
-            onClick={listCmas}
-            aria-label="list-cmas"
-          >
-            <Icon>list_alt</Icon>
-          </IconButton>
-        </Tooltip>
+        {/* Removed 'List CMAs' button */}
         {/* Removed 'Save test profile' button */}
         <Tooltip title="Sign out">
           <IconButton
