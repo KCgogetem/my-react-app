@@ -8,8 +8,6 @@ import Box from "@mui/material/Box";
 import SideMenu from "./SideMenu";
 import Header from "./Header";
 // import ChartUserByCountry from "./ChartCmaByCounty";
-import HighlightedCard from "./HighlightedCard";
-import CustomizedDataGrid from "./CustomizedDataGrid";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
