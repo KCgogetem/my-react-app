@@ -3,6 +3,28 @@ import { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { fetchAuthSession } from "aws-amplify/auth";
 
+// DebugIdToken component for logging the ID token
+function DebugIdToken() {
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
+
+        console.log("🔥 ID TOKEN 🔥");
+        console.log(idToken);
+
+        if (!idToken) {
+          console.error("No ID token found");
+        }
+      } catch (err) {
+        console.error("Failed to fetch auth session:", err);
+      }
+    })();
+  }, []);
+  return null;
+}
+
 
 import DashboardLayout from "../components/DashboardLayout";
 import MainGrid from "../components/MainGrid";
@@ -91,6 +113,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
+      <DebugIdToken />
       <Box>
         {/* Loading state so we don't flash dashboard content */}
         {loadingMe && (
