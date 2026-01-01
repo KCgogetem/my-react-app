@@ -26,11 +26,11 @@ type Message = {
   stepKey?: StepKey; // which step produced this assistant question / user answer
 };
 
-type StepKey = "goal" | "timeframe" | "condition" | "radius" | "notes" | "done";
+type StepKey = "goal" | "hoa" | "condition" | "radius" | "notes" | "done";
 
 type Answers = {
-  goal?: "quick_sale" | "maximize_price" | "market_test";
-  timeframe?: 30 | 60 | 90;
+  goal?: "quick_sale" | "maximize_price" | "competitive";
+  hoa?: boolean;
   condition?: "needs_work" | "average" | "updated" | "renovated";
   radius?: 0.5 | 1 | 2;
   notes?: string;
@@ -58,11 +58,11 @@ function storageKey(placeId?: string) {
   return `cma_setup_chat_v1:${placeId || "unknown-address"}`;
 }
 
-const STEP_ORDER: StepKey[] = ["goal", "timeframe", "condition", "radius", "notes", "done"];
+const STEP_ORDER: StepKey[] = ["goal", "hoa", "condition", "radius", "notes", "done"];
 
 const STEP_QUESTION: Record<Exclude<StepKey, "done">, string> = {
   goal: "What’s your goal for this listing?",
-  timeframe: "How soon are you hoping to sell?",
+  hoa: "Does the subject property have an HOA?",
   condition: "How would you rate the home’s condition compared to nearby homes?",
   radius: "How close should sold comps be?",
   notes: "Anything else I should account for? (Upgrades, pool, busy road, premium lot, etc.)",
@@ -70,7 +70,7 @@ const STEP_QUESTION: Record<Exclude<StepKey, "done">, string> = {
 
 const STEP_WHY: Record<Exclude<StepKey, "done">, string> = {
   goal: "This changes the pricing strategy and how aggressive the recommended list price should be.",
-  timeframe: "This affects how we weight days-on-market and how we interpret comp recency and pricing.",
+  hoa: "HOA status can affect property value, buyer pool, and comparable selection.",
   condition: "Condition helps adjust comp selection and explain pricing differences in the CMA narrative.",
   radius: "Radius controls how similar the neighborhood comps are. Too tight may yield too few comps; too wide can dilute accuracy.",
   notes: "Notes let you flag upgrades or negatives that the comps might not reflect (roof, pool, traffic, lot premium).",
@@ -81,16 +81,15 @@ type QuickReply = { label: string; value: any };
 function quickRepliesFor(step: StepKey): QuickReply[] {
   if (step === "goal") {
     return [
-      { label: "Quick sale", value: "quick_sale" },
-      { label: "Maximize price", value: "maximize_price" },
-      { label: "Test the market", value: "market_test" },
+      { label: "Quick Sale", value: "quick_sale" },
+      { label: "Max Price", value: "maximize_price" },
+      { label: "Competitive", value: "competitive" },
     ];
   }
-  if (step === "timeframe") {
+  if (step === "hoa") {
     return [
-      { label: "30 days", value: 30 },
-      { label: "60 days", value: 60 },
-      { label: "90+ days", value: 90 },
+      { label: "Yes", value: true },
+      { label: "No", value: false },
     ];
   }
   if (step === "condition") {
@@ -113,12 +112,12 @@ function quickRepliesFor(step: StepKey): QuickReply[] {
 
 function formatAnswer(key: keyof Answers, value: any) {
   if (!value && value !== 0) return "—";
-  if (key === "timeframe") return `${value} days`;
+  if (key === "hoa") return value ? "Yes" : "No";
   if (key === "radius") return `${value} miles`;
   if (key === "goal") {
-    if (value === "quick_sale") return "Quick sale";
-    if (value === "maximize_price") return "Maximize price";
-    if (value === "market_test") return "Test the market";
+    if (value === "quick_sale") return "Quick Sale";
+    if (value === "maximize_price") return "Max Price";
+    if (value === "competitive") return "Competitive";
   }
   if (key === "condition") {
     if (value === "needs_work") return "Needs work";
@@ -149,9 +148,17 @@ function CmaSetupChat({ verifiedAddress, onDone }: Props) {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        if (parsed?.messages?.length) setMessages(parsed.messages);
-        if (parsed?.step) setStep(parsed.step);
-        if (parsed?.answers) setAnswers(parsed.answers);
+        // Remove any old 'timeframe' messages from transcript
+        let filteredMessages = parsed?.messages?.filter?.(
+          (m: any) => m.stepKey !== 'timeframe'
+        ) || [];
+        if (filteredMessages.length) setMessages(filteredMessages);
+        if (parsed?.step && parsed.step !== 'timeframe') setStep(parsed.step);
+        // Remove 'timeframe' from answers if present
+        if (parsed?.answers) {
+          const { timeframe, ...rest } = parsed.answers;
+          setAnswers(rest);
+        }
         return;
       } catch {
         // ignore corrupted data
@@ -237,7 +244,7 @@ function CmaSetupChat({ verifiedAddress, onDone }: Props) {
 
   function setAnswerForCurrentStep(value: any) {
     if (step === "goal") setAnswers((a) => ({ ...a, goal: value }));
-    if (step === "timeframe") setAnswers((a) => ({ ...a, timeframe: value }));
+    if (step === "hoa") setAnswers((a) => ({ ...a, hoa: value }));
     if (step === "condition") setAnswers((a) => ({ ...a, condition: value }));
     if (step === "radius") setAnswers((a) => ({ ...a, radius: value }));
     // notes handled separately
@@ -262,11 +269,7 @@ function CmaSetupChat({ verifiedAddress, onDone }: Props) {
     advanceFrom("notes");
   }
 
-  function resetChat() {
-    localStorage.removeItem(LS_KEY);
-    // re-trigger init by clearing state; effect will rebuild from scratch
-    setMessages([]);
-  }
+
 
   // --- Edit/jump: rewind conversation to a step
   function jumpToStep(target: StepKey) {
@@ -294,7 +297,7 @@ function CmaSetupChat({ verifiedAddress, onDone }: Props) {
     (STEP_ORDER.slice(tIndex) as StepKey[]).forEach((k) => {
       if (k === "done") return;
       if (k === "goal") delete cleared.goal;
-      if (k === "timeframe") delete cleared.timeframe;
+      if (k === "hoa") delete cleared.hoa;
       if (k === "condition") delete cleared.condition;
       if (k === "radius") delete cleared.radius;
       if (k === "notes") delete cleared.notes;
@@ -312,7 +315,7 @@ function CmaSetupChat({ verifiedAddress, onDone }: Props) {
   const readyToGenerate = step === "done";
   const profileSummary = [
     { key: "goal", label: "Goal", value: formatAnswer("goal", answers.goal) },
-    { key: "timeframe", label: "Timeframe", value: formatAnswer("timeframe", answers.timeframe) },
+    { key: "hoa", label: "HOA", value: formatAnswer("hoa", answers.hoa) },
     { key: "condition", label: "Condition", value: formatAnswer("condition", answers.condition) },
     { key: "radius", label: "Comp radius", value: formatAnswer("radius", answers.radius) },
     { key: "notes", label: "Notes", value: formatAnswer("notes", answers.notes) },
@@ -404,11 +407,30 @@ function CmaSetupChat({ verifiedAddress, onDone }: Props) {
               <Button
                 variant="contained"
                 fullWidth
-                onClick={() => {
+                onClick={async () => {
+                  // TODO: Replace with actual values
+                  const API_BASE_URL = import.meta.env.VITE_API_URL;
+                  const requestId = "example-request-id"; // Replace with real requestId
+                  const idToken = "example-id-token"; // Replace with real idToken from auth
+                  try {
+                    await fetch(
+                      `${API_BASE_URL}/tools/mls-comps/${requestId}`,
+                      {
+                        method: "POST",
+                        headers: {
+                          Authorization: `Bearer ${idToken}`,
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
+                  } catch (err) {
+                    // Optionally handle error
+                    console.error("Failed to send MLS comps request", err);
+                  }
                   onDone?.(answers);
                 }}
               >
-                Generate CMA
+                Send
               </Button>
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.7 }}>
                 Next step: we’ll use these answers + the verified address to fetch comps.

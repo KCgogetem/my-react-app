@@ -17,7 +17,8 @@ type Row = {
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleString();
+    // Only show the date part (YYYY-MM-DD or locale date)
+    return new Date(iso).toLocaleDateString();
   } catch {
     return iso;
   }
@@ -41,28 +42,23 @@ export default function CustomizedDataGrid() {
       {
         field: "formatted_address",
         headerName: "Address",
-        // flex: 1, // removed to prevent auto-expansion
         minWidth: 320,
         maxWidth: 500,
       },
       {
+        field: "price",
+        headerName: "Price",
+        width: 120,
+        maxWidth: 140,
+        // Placeholder value, update valueGetter/renderCell when data is available
+        valueGetter: () => "—",
+      },
+      {
         field: "created_at",
         headerName: "Created",
-        width: 190,
-        maxWidth: 220,
+        width: 140,
+        maxWidth: 160,
         valueGetter: (_, r) => formatDate(r.created_at),
-      },
-      {
-        field: "status",
-        headerName: "CMA Status",
-        width: 120,
-        maxWidth: 140,
-      },
-      {
-        field: "property_appraiser_status",
-        headerName: "Appraiser",
-        width: 120,
-        maxWidth: 140,
       },
       {
         field: "county_hint",
@@ -80,7 +76,7 @@ export default function CustomizedDataGrid() {
       },
       {
         field: "actions",
-        headerName: "",
+        headerName: "Actions",
         width: 140,
         maxWidth: 160,
         sortable: false,
