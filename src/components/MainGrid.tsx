@@ -11,7 +11,7 @@ import Icon from "@mui/material/Icon";
 import NewCmaModal from "../components/NewCmaModal";
 import { startCmaPipeline } from "../api/cmaPipeline";
 
-export default function MainGrid() {
+export default function MainGrid({ userName }: { userName?: string }) {
   const [cmaModalOpen, setCmaModalOpen] = useState(false);
 
 
@@ -37,7 +37,7 @@ export default function MainGrid() {
           >
             <Box>
               <Typography variant="h5" fontWeight={600}>
-                Welcome back 👋
+                Welcome back{userName ? `, ${userName}` : ""} 👋
               </Typography>
               <Typography variant="body2" color="text.secondary" mt={1}>
                 Start a new comparative market analysis or pick up where you left off.

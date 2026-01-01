@@ -140,7 +140,7 @@ export default function Dashboard() {
         {/* Only show dashboard content after profile is complete */}
         {!loadingMe && profileComplete && (
           <>
-            <MainGrid />
+            <MainGrid userName={me?.firstName || me?.name || "User"} />
             <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3 }}>
               <ChartCmaByCounty />
               <CustomizedDataGrid />

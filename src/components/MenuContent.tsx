@@ -21,7 +21,8 @@ const mainListItems = [
 
 const secondaryListItems = [
   { text: 'Settings', icon: <SettingsRoundedIcon />, href: '/settings' },
-  { text: 'About', icon: <InfoRoundedIcon />, href: '/privacy-policy' },
+  { text: 'Privacy Policy', icon: <InfoRoundedIcon />, href: '/privacy-policy' },
+  { text: 'Terms', icon: <AssignmentRoundedIcon />, href: '/terms' },
   { text: 'Feedback', icon: <HelpRoundedIcon />, href: '/feedback' },
 ];
 
