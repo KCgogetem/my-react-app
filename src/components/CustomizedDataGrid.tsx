@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { fetchCmaHistory, type CmaHistoryItem } from "../api/cmaHistory";
 
 type Row = {
-  id: string; // DataGrid row id
+  id: string;
   request_id: string;
   created_at: string;
-  status: string;
+  status?: string;
   formatted_address: string;
   county_hint?: string | null;
   state_hint?: string | null;
@@ -17,7 +17,6 @@ type Row = {
 
 function formatDate(iso: string) {
   try {
-    // Only show the date part (YYYY-MM-DD or locale date)
     return new Date(iso).toLocaleDateString();
   } catch {
     return iso;
@@ -27,15 +26,15 @@ function formatDate(iso: string) {
 export default function CustomizedDataGrid() {
   const navigate = useNavigate();
 
-  // ✅ change this to match your actual route
-  // examples:
-  // const CMA_RESULTS_ROUTE_PREFIX = "/cma-results";
-  // const CMA_RESULTS_ROUTE_PREFIX = "/cma-results"; // with param: /cma-results/:requestId
+  // ✅ must match your router
   const CMA_RESULTS_ROUTE_PREFIX = "/cma-results";
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // StrictMode/dev can run effects twice; this prevents duplicate state updates.
+  const didLoadRef = useRef(false);
 
   const columns: GridColDef[] = useMemo(
     () => [
@@ -43,42 +42,36 @@ export default function CustomizedDataGrid() {
         field: "formatted_address",
         headerName: "Address",
         minWidth: 320,
-        maxWidth: 500,
+        flex: 1,
       },
       {
         field: "price",
         headerName: "Price",
         width: 120,
-        maxWidth: 140,
-        // Placeholder value, update valueGetter/renderCell when data is available
         valueGetter: () => "—",
       },
       {
         field: "created_at",
         headerName: "Created",
         width: 140,
-        maxWidth: 160,
         valueGetter: (_, r) => formatDate(r.created_at),
       },
       {
         field: "county_hint",
         headerName: "County",
         width: 130,
-        maxWidth: 160,
         valueGetter: (_, r) => r.county_hint ?? "—",
       },
       {
         field: "state_hint",
         headerName: "State",
         width: 90,
-        maxWidth: 110,
         valueGetter: (_, r) => r.state_hint ?? "—",
       },
       {
         field: "actions",
         headerName: "Actions",
         width: 140,
-        maxWidth: 160,
         sortable: false,
         filterable: false,
         disableColumnMenu: true,
@@ -98,46 +91,53 @@ export default function CustomizedDataGrid() {
         ),
       },
     ],
-    [navigate]
+    [navigate, CMA_RESULTS_ROUTE_PREFIX]
   );
 
   useEffect(() => {
-    let alive = true;
+    // In dev + StrictMode, effect runs twice. We only want one “real” load.
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
+
+    const ac = new AbortController();
 
     (async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const items: CmaHistoryItem[] = await fetchCmaHistory(10);
+        const items: CmaHistoryItem[] = await fetchCmaHistory(10, {
+          signal: ac.signal,
+        });
 
-        // enforce newest first
+        // If your backend already returns newest first, you can skip this sort.
         const sorted = [...items].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
         const mapped: Row[] = sorted.slice(0, 10).map((it) => ({
           id: it.request_id,
           request_id: it.request_id,
           created_at: it.created_at,
-          status: it.status,
+          status: it.status ?? "",
           formatted_address: it.formatted_address,
           county_hint: it.county_hint ?? null,
           state_hint: it.state_hint ?? null,
           property_appraiser_status: it.property_appraiser_status ?? null,
         }));
 
-        if (alive) setRows(mapped);
+        setRows(mapped);
       } catch (e: any) {
-        if (alive) setError(e?.message ?? "Failed to load CMA history");
+        // Ignore abort errors
+        if (ac.signal.aborted) return;
+        setError(e?.message ?? "Failed to load CMA history");
       } finally {
-        if (alive) setLoading(false);
+        if (!ac.signal.aborted) setLoading(false);
       }
     })();
 
-    return () => {
-      alive = false;
-    };
+    return () => ac.abort();
   }, []);
 
   if (loading) {
@@ -158,7 +158,7 @@ export default function CustomizedDataGrid() {
   }
 
   return (
-    <Box sx={{ height: 420, minWidth: 900, overflowX: 'auto' }}>
+    <Box sx={{ height: 420, minWidth: 900, overflowX: "auto" }}>
       <DataGrid
         rows={rows}
         columns={columns}

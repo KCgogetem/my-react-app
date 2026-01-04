@@ -96,7 +96,7 @@ function quickRepliesFor(step: StepKey): QuickReply[] {
     return [
       { label: "Needs work", value: "needs_work" },
       { label: "Average", value: "average" },
-      { label: "Updated", value: "updated" },
+      { label: "Some updates", value: "updated" },
       { label: "Renovated", value: "renovated" },
     ];
   }
@@ -122,7 +122,7 @@ function formatAnswer(key: keyof Answers, value: any) {
   if (key === "condition") {
     if (value === "needs_work") return "Needs work";
     if (value === "average") return "Average";
-    if (value === "updated") return "Updated";
+    if (value === "updated") return "Some updates";
     if (value === "renovated") return "Renovated";
   }
   return String(value);
