@@ -21,6 +21,12 @@ interface Props {
   stateHint?: string;
   countyHint?: string;
 
+  // ✅ geo + optional extras to persist for MLS radius work
+  lat?: number;
+  lng?: number;
+  postalCode?: string;
+  city?: string;
+
   renderUI?: boolean;
 
   onRequestId?: (requestId: string) => void;
@@ -34,23 +40,32 @@ function safeGet(obj: any, path: string) {
     .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
 }
 
+/**
+ * Normalizes whatever shape comes back from:
+ * - GET /cmas/{id} -> { status, request_id, item: {...ddb item...} }
+ * - older shapes where property_appraiser is top-level
+ * - tools.property_appraiser.data may be nested
+ */
 function normalizePropertyAppraiserPayload(anyRecord: any) {
   if (!anyRecord) return null;
 
   const record = anyRecord?.item ? anyRecord.item : anyRecord;
 
+  // Preferred: from Dynamo "tools.property_appraiser.data"
   const fromTools =
     safeGet(record, "tools.property_appraiser.data") ??
     safeGet(record, "item.tools.property_appraiser.data") ??
     null;
 
   if (fromTools) {
+    // Sometimes saved as { data: { ...tool2Payload } } - unwrap once
     if (fromTools.data && fromTools.match === undefined && fromTools.source === undefined) {
       return fromTools.data;
     }
-    return fromTools;
+    return fromTools; // tool2 payload
   }
 
+  // Fallback: top-level property_appraiser
   const fromTopLevel =
     safeGet(record, "property_appraiser") ??
     safeGet(record, "item.property_appraiser") ??
@@ -65,6 +80,10 @@ export default function CmaPipelineResult({
   address,
   stateHint = "FL",
   countyHint,
+  lat,
+  lng,
+  postalCode,
+  city,
   renderUI = true,
   onRequestId,
   onPropertyFacts,
@@ -92,15 +111,24 @@ export default function CmaPipelineResult({
   }, [onItem]);
 
   // ✅ prevents duplicate POST /cmas (StrictMode + rerenders)
+  // Key "run eligibility" by address+county+state+geo to avoid spam
   const startedRef = useRef(false);
-  const lastAddressRef = useRef<string | null>(null);
+  const lastRunKeyRef = useRef<string | null>(null);
+
+  const runKey = useMemo(() => {
+    const latKey = typeof lat === "number" ? lat.toFixed(6) : "";
+    const lngKey = typeof lng === "number" ? lng.toFixed(6) : "";
+    const countyKey = countyHint ?? "";
+    const stateKey = stateHint ?? "";
+    return `${address}|${stateKey}|${countyKey}|${latKey}|${lngKey}`;
+  }, [address, stateHint, countyHint, lat, lng]);
 
   useEffect(() => {
     if (!address) return;
 
-    // If address changed, allow a fresh run.
-    if (lastAddressRef.current !== address) {
-      lastAddressRef.current = address;
+    // If runKey changes, allow a fresh run
+    if (lastRunKeyRef.current !== runKey) {
+      lastRunKeyRef.current = runKey;
       startedRef.current = false;
       setRequestId(null);
       setItem(null);
@@ -114,10 +142,17 @@ export default function CmaPipelineResult({
       try {
         setStarting(true);
 
+        // ✅ FIX: API helper expects `location: {lat,lng}` not top-level lat/lng
+        const location =
+          typeof lat === "number" && typeof lng === "number" ? { lat, lng } : undefined;
+
         const res = await startCmaPipeline({
           formattedAddress: address,
           stateHint,
           countyHint,
+          location,
+          postalCode,
+          city,
         });
 
         const rid = res?.request_id || res?.requestId;
@@ -132,8 +167,8 @@ export default function CmaPipelineResult({
         setStarting(false);
       }
     })();
-    // ✅ intentionally do NOT depend on callbacks
-  }, [address, stateHint, countyHint]);
+    // ✅ intentionally do NOT depend on callbacks (we use refs)
+  }, [runKey, address, stateHint, countyHint, lat, lng, postalCode, city]);
 
   useEffect(() => {
     if (!requestId) return;
@@ -154,6 +189,7 @@ export default function CmaPipelineResult({
           onItemRef.current?.(record);
 
           const recordUnwrapped = record?.item ? record.item : record;
+
           const paStatus =
             safeGet(recordUnwrapped, "tools.property_appraiser.status") ??
             safeGet(recordUnwrapped, "property_appraiser.status") ??
@@ -186,15 +222,26 @@ export default function CmaPipelineResult({
     );
   }, [item]);
 
+  /**
+   * facts normalization rules:
+   * - Tool2 response: { status, match, source, data: {...facts...} }
+   * - Dynamo: tools.property_appraiser.data = tool2 payload
+   * - Older/wonky: tools.property_appraiser.data.data = {...facts...}
+   */
   const facts = useMemo(() => {
     if (!pa) return null;
-    if (pa.data && typeof pa.data === "object" && !pa.data.data) return pa.data;
-    if (pa.data?.data) return pa.data.data;
+
+    if (pa.data && typeof pa.data === "object") {
+      if (pa.data?.data && typeof pa.data.data === "object") return pa.data.data;
+      return pa.data;
+    }
+
     return pa;
   }, [pa]);
 
   useEffect(() => {
     if (facts) onPropertyFactsRef.current?.(facts);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facts]);
 
   if (!renderUI) return null;
@@ -228,7 +275,9 @@ export default function CmaPipelineResult({
             <Chip
               size="small"
               label={`Match confidence: ${
-                typeof matchConf === "number" && !Number.isNaN(matchConf) ? matchConf.toFixed(2) : "—"
+                typeof matchConf === "number" && !Number.isNaN(matchConf)
+                  ? matchConf.toFixed(2)
+                  : "—"
               }`}
               variant="outlined"
             />

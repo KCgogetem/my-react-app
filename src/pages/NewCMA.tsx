@@ -1,8 +1,9 @@
 // src/pages/NewCMA.tsx
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import DashboardLayout from "../components/DashboardLayout";
+
 import {
   Box,
   Paper,
@@ -55,7 +56,8 @@ type VerifiedAddressObj = {
   county?: string;
   lat?: number;
   lng?: number;
-  [k: string]: any;
+  city?: string;
+  postalCode?: string;
 };
 
 function normalizeVerifiedAddress(v: any): VerifiedAddressObj | null {
@@ -68,11 +70,8 @@ function normalizeVerifiedAddress(v: any): VerifiedAddressObj | null {
 const NewCMA: React.FC = () => {
   const { verifiedAddress } = useVerifiedAddress();
 
-  // ✅ always treat verified as object (even if old string sneaks in)
   const verified = useMemo(() => normalizeVerifiedAddress(verifiedAddress), [verifiedAddress]);
-
-  const addressString = verified?.verifiedAddress?.trim() || "";
-  const countyHint = verified?.county;
+  const addressString = verified?.verifiedAddress || "";
   const lat = verified?.lat;
   const lng = verified?.lng;
 
@@ -88,16 +87,10 @@ const NewCMA: React.FC = () => {
     notes: "",
   });
 
-  // ✅ reset local pipeline state when address changes (prevents “stale” display)
-  useEffect(() => {
-    setRequestId(null);
-    setFacts(null);
-  }, [addressString]);
-
   // user display name from Cognito
   const [displayName, setDisplayName] = useState<string>("");
 
-  useEffect(() => {
+  React.useEffect(() => {
     (async () => {
       try {
         const session = await fetchAuthSession();
@@ -115,15 +108,16 @@ const NewCMA: React.FC = () => {
     })();
   }, []);
 
-  // ✅ stable callbacks so pipeline effect doesn't restart
+  // ✅ stable callbacks so pipeline doesn't restart
   const onRequestId = useCallback((rid: string) => {
     setRequestId((prev) => (prev === rid ? prev : rid));
   }, []);
 
   const onPropertyFacts = useCallback((f: any) => {
     setFacts((prev: any) => {
-      // avoid noisy rerenders; keep it simple + safe
-      if (prev === f) return prev;
+      try {
+        if (JSON.stringify(prev) === JSON.stringify(f)) return prev;
+      } catch {}
       return f;
     });
   }, []);
@@ -133,7 +127,7 @@ const NewCMA: React.FC = () => {
     return `Alright, ${who} — here are the details I’ve gathered about the property you want to build a CMA around.`;
   }, [displayName]);
 
-  if (!verified || !addressString) {
+  if (!verified || !verified.verifiedAddress) {
     return (
       <AppTheme>
         <CssBaseline enableColorScheme />
@@ -150,6 +144,9 @@ const NewCMA: React.FC = () => {
       </AppTheme>
     );
   }
+
+  const location =
+    lat !== undefined && lng !== undefined ? { lat, lng } : undefined;
 
   return (
     <AppTheme>
@@ -169,14 +166,14 @@ const NewCMA: React.FC = () => {
 
               <Divider />
 
-              {/* ✅ quick debug strip so you KNOW the page has address + geo */}
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip size="small" label={`Address OK`} variant="outlined" />
-                {countyHint ? <Chip size="small" label={`County: ${countyHint}`} variant="outlined" /> : null}
-                {lat != null && lng != null ? (
-                  <Chip size="small" label={`Lat/Lng: ${lat}, ${lng}`} variant="outlined" />
+                {requestId && (
+                  <Chip size="small" label={`Request ID: ${requestId}`} variant="outlined" />
+                )}
+                <Chip size="small" label="County Records" variant="outlined" />
+                {verified.county ? (
+                  <Chip size="small" label={`County: ${verified.county}`} variant="outlined" />
                 ) : null}
-                {requestId ? <Chip size="small" label={`Request ID: ${requestId}`} variant="outlined" /> : null}
               </Stack>
 
               <Box sx={{ mt: 1 }}>
@@ -188,6 +185,13 @@ const NewCMA: React.FC = () => {
                   <Typography variant="body2">
                     <strong>Address:</strong> {facts?.situs_address || addressString}
                   </Typography>
+
+                  {/* optional debug line */}
+                  {location && (
+                    <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                      <strong>Lat/Lng:</strong> {location.lat}, {location.lng}
+                    </Typography>
+                  )}
 
                   <Box
                     sx={{
@@ -225,16 +229,16 @@ const NewCMA: React.FC = () => {
             </Stack>
           </Paper>
 
-          {/* ✅ Data-only pipeline runner (does NOT render UI) */}
+          {/* ✅ Data-only pipeline runner */}
           <CmaPipelineResult
-  address={addressString}
-  stateHint="FL"
-  countyHint={verified.county}
-  lat={verified.lat}
-  lng={verified.lng}
-  renderUI={false}
-  onRequestId={onRequestId}
-  onPropertyFacts={onPropertyFacts}
+            address={addressString}
+            stateHint="FL"
+            countyHint={verified.county}
+            renderUI={false}
+            onRequestId={onRequestId}
+            onPropertyFacts={onPropertyFacts}
+            city={verified.city}
+            postalCode={verified.postalCode}
           />
 
           {/* --- Section B: Inputs list --- */}
