@@ -106,9 +106,7 @@ export default function CustomizedDataGrid() {
       setError(null);
 
       try {
-        const items: CmaHistoryItem[] = await fetchCmaHistory(10, {
-          signal: ac.signal,
-        });
+        const items: CmaHistoryItem[] = await fetchCmaHistory(10);
 
         // If your backend already returns newest first, you can skip this sort.
         const sorted = [...items].sort(

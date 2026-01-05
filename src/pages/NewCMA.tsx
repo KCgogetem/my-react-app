@@ -1,9 +1,8 @@
 // src/pages/NewCMA.tsx
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import DashboardLayout from "../components/DashboardLayout";
-
 import {
   Box,
   Paper,
@@ -51,8 +50,31 @@ type Inputs = {
   notes?: string;
 };
 
+type VerifiedAddressObj = {
+  verifiedAddress: string;
+  county?: string;
+  lat?: number;
+  lng?: number;
+  [k: string]: any;
+};
+
+function normalizeVerifiedAddress(v: any): VerifiedAddressObj | null {
+  if (!v) return null;
+  if (typeof v === "string") return { verifiedAddress: v };
+  if (typeof v === "object" && typeof v.verifiedAddress === "string") return v as VerifiedAddressObj;
+  return null;
+}
+
 const NewCMA: React.FC = () => {
   const { verifiedAddress } = useVerifiedAddress();
+
+  // ✅ always treat verified as object (even if old string sneaks in)
+  const verified = useMemo(() => normalizeVerifiedAddress(verifiedAddress), [verifiedAddress]);
+
+  const addressString = verified?.verifiedAddress?.trim() || "";
+  const countyHint = verified?.county;
+  const lat = verified?.lat;
+  const lng = verified?.lng;
 
   const [requestId, setRequestId] = useState<string | null>(null);
   const [facts, setFacts] = useState<any>(null);
@@ -66,15 +88,16 @@ const NewCMA: React.FC = () => {
     notes: "",
   });
 
-  const addressString =
-    typeof (verifiedAddress as any) === "string"
-      ? (verifiedAddress as any)
-      : (verifiedAddress as any)?.verifiedAddress;
+  // ✅ reset local pipeline state when address changes (prevents “stale” display)
+  useEffect(() => {
+    setRequestId(null);
+    setFacts(null);
+  }, [addressString]);
 
   // user display name from Cognito
   const [displayName, setDisplayName] = useState<string>("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     (async () => {
       try {
         const session = await fetchAuthSession();
@@ -99,12 +122,8 @@ const NewCMA: React.FC = () => {
 
   const onPropertyFacts = useCallback((f: any) => {
     setFacts((prev: any) => {
-      // avoid useless rerenders if facts are identical-ish
-      try {
-        if (JSON.stringify(prev) === JSON.stringify(f)) return prev;
-      } catch {
-        // ignore stringify issues
-      }
+      // avoid noisy rerenders; keep it simple + safe
+      if (prev === f) return prev;
       return f;
     });
   }, []);
@@ -114,7 +133,7 @@ const NewCMA: React.FC = () => {
     return `Alright, ${who} — here are the details I’ve gathered about the property you want to build a CMA around.`;
   }, [displayName]);
 
-  if (!verifiedAddress) {
+  if (!verified || !addressString) {
     return (
       <AppTheme>
         <CssBaseline enableColorScheme />
@@ -143,17 +162,21 @@ const NewCMA: React.FC = () => {
               <Typography variant="h6" fontWeight={800}>
                 Property Overview
               </Typography>
+
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
                 {topHeader}
               </Typography>
 
               <Divider />
 
+              {/* ✅ quick debug strip so you KNOW the page has address + geo */}
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {requestId && (
-                  <Chip size="small" label={`Request ID: ${requestId}`} variant="outlined" />
-                )}
-                <Chip size="small" label="County Records" variant="outlined" />
+                <Chip size="small" label={`Address OK`} variant="outlined" />
+                {countyHint ? <Chip size="small" label={`County: ${countyHint}`} variant="outlined" /> : null}
+                {lat != null && lng != null ? (
+                  <Chip size="small" label={`Lat/Lng: ${lat}, ${lng}`} variant="outlined" />
+                ) : null}
+                {requestId ? <Chip size="small" label={`Request ID: ${requestId}`} variant="outlined" /> : null}
               </Stack>
 
               <Box sx={{ mt: 1 }}>
@@ -163,8 +186,7 @@ const NewCMA: React.FC = () => {
 
                 <Stack spacing={1}>
                   <Typography variant="body2">
-                    <strong>Address:</strong>{" "}
-                    {facts?.situs_address || addressString}
+                    <strong>Address:</strong> {facts?.situs_address || addressString}
                   </Typography>
 
                   <Box
@@ -176,14 +198,8 @@ const NewCMA: React.FC = () => {
                   >
                     <Fact label="Beds" value={String(facts?.beds ?? "—")} />
                     <Fact label="Baths" value={String(facts?.baths ?? "—")} />
-                    <Fact
-                      label="Living sqft"
-                      value={facts?.living_sqft ? fmtInt(facts.living_sqft) : "—"}
-                    />
-                    <Fact
-                      label="Lot sqft"
-                      value={facts?.lot_sqft ? fmtInt(facts.lot_sqft) : "—"}
-                    />
+                    <Fact label="Living sqft" value={facts?.living_sqft ? fmtInt(facts.living_sqft) : "—"} />
+                    <Fact label="Lot sqft" value={facts?.lot_sqft ? fmtInt(facts.lot_sqft) : "—"} />
                     <Fact label="Year built" value={String(facts?.year_built ?? "—")} />
                     <Fact label="Zoning" value={String(facts?.zoning ?? "—")} />
                   </Box>
@@ -195,20 +211,14 @@ const NewCMA: React.FC = () => {
                   <Typography variant="body2">
                     <strong>Last sale:</strong>{" "}
                     {facts?.last_sale?.date ? String(facts.last_sale.date) : "—"}{" "}
-                    {facts?.last_sale?.price != null ? (
-                      <>for {fmtMoney(facts.last_sale.price)}</>
-                    ) : null}
+                    {facts?.last_sale?.price != null ? <>for {fmtMoney(facts.last_sale.price)}</> : null}
                   </Typography>
 
                   <Typography variant="body2">
                     <strong>Assessed:</strong>{" "}
                     {facts?.assessed?.tax_year ? `Tax year ${facts.assessed.tax_year}` : "—"}
-                    {facts?.assessed?.just_value != null ? (
-                      <> • Just value {fmtMoney(facts.assessed.just_value)}</>
-                    ) : null}
-                    {facts?.assessed?.assessed_value != null ? (
-                      <> • Assessed {fmtMoney(facts.assessed.assessed_value)}</>
-                    ) : null}
+                    {facts?.assessed?.just_value != null ? <> • Just value {fmtMoney(facts.assessed.just_value)}</> : null}
+                    {facts?.assessed?.assessed_value != null ? <> • Assessed {fmtMoney(facts.assessed.assessed_value)}</> : null}
                   </Typography>
                 </Stack>
               </Box>
@@ -217,11 +227,14 @@ const NewCMA: React.FC = () => {
 
           {/* ✅ Data-only pipeline runner (does NOT render UI) */}
           <CmaPipelineResult
-            address={addressString}
-            stateHint="FL"
-            renderUI={false}
-            onRequestId={onRequestId}
-            onPropertyFacts={onPropertyFacts}
+  address={addressString}
+  stateHint="FL"
+  countyHint={verified.county}
+  lat={verified.lat}
+  lng={verified.lng}
+  renderUI={false}
+  onRequestId={onRequestId}
+  onPropertyFacts={onPropertyFacts}
           />
 
           {/* --- Section B: Inputs list --- */}
@@ -256,9 +269,7 @@ const NewCMA: React.FC = () => {
                 <QASelectRow
                   label="How would you rate the home’s condition compared to nearby homes?"
                   value={inputs.condition || ""}
-                  onChange={(v) =>
-                    setInputs((s) => ({ ...s, condition: v as Inputs["condition"] }))
-                  }
+                  onChange={(v) => setInputs((s) => ({ ...s, condition: v as Inputs["condition"] }))}
                   options={["Needs updates", "Some updates", "Renovated"]}
                 />
 
@@ -315,7 +326,7 @@ const NewCMA: React.FC = () => {
 
 export default NewCMA;
 
-// ------- small subcomponents -------
+// ------- subcomponents -------
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
@@ -352,12 +363,7 @@ function QASelectRow({
       }}
     >
       <ListItemText primary={<Typography fontWeight={700}>{label}</Typography>} />
-      <Select
-        size="small"
-        value={value}
-        displayEmpty
-        onChange={(e) => onChange(String(e.target.value))}
-      >
+      <Select size="small" value={value} displayEmpty onChange={(e) => onChange(String(e.target.value))}>
         <MenuItem value="">
           <em>Not set</em>
         </MenuItem>
@@ -393,12 +399,7 @@ function QAToggleRow({
       }}
     >
       <ListItemText primary={<Typography fontWeight={700}>{label}</Typography>} />
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={value}
-        onChange={(_, v) => onChange(v || "")}
-      >
+      <ToggleButtonGroup exclusive size="small" value={value} onChange={(_, v) => onChange(v || "")}>
         {options.map((o) => (
           <ToggleButton key={o} value={o}>
             {o}
