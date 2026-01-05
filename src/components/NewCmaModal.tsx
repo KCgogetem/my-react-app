@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useVerifiedAddress } from "../lib/VerifiedAddressContext";
 import { useNavigate } from "react-router-dom";
 import {
