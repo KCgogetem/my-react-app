@@ -29,7 +29,6 @@ function DebugIdToken() {
 import DashboardLayout from "../components/DashboardLayout";
 import MainGrid from "../components/MainGrid";
 import CompleteProfileModal from "../components/CompleteProfileModal";
-import ChartCmaByCounty from "../components/ChartCmaByCounty";
 import CustomizedDataGrid from "../components/CustomizedDataGrid";
 
 const API_BASE = import.meta.env.VITE_API_URL as string;
@@ -142,7 +141,6 @@ export default function Dashboard() {
           <>
             <MainGrid userName={me?.firstName || me?.name || "User"} />
             <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3 }}>
-              <ChartCmaByCounty />
               <CustomizedDataGrid />
             </Box>
           </>

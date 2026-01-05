@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+// src/pages/NewCMA.tsx
+import React, { useCallback, useMemo, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import DashboardLayout from "../components/DashboardLayout";
@@ -24,7 +25,7 @@ import { fetchAuthSession } from "aws-amplify/auth";
 import { useVerifiedAddress } from "../lib/VerifiedAddressContext";
 import CmaPipelineResult from "../components/CmaPipelineResults";
 
-// --- formatting helpers (same vibe as your snapshot component) ---
+// --- formatting helpers ---
 function fmtInt(n: any) {
   const v = typeof n === "string" ? Number(n) : n;
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
@@ -40,7 +41,7 @@ function fmtMoney(n: any) {
   }).format(v);
 }
 
-// --- simple “inputs” model for now ---
+// --- inputs model ---
 type Inputs = {
   goal?: "Max Price" | "Quick Sale" | "Test Market" | "";
   hoa?: "Yes" | "No" | "";
@@ -70,7 +71,7 @@ const NewCMA: React.FC = () => {
       ? (verifiedAddress as any)
       : (verifiedAddress as any)?.verifiedAddress;
 
-  // user display name from Cognito (you said you store it)
+  // user display name from Cognito
   const [displayName, setDisplayName] = useState<string>("");
 
   React.useEffect(() => {
@@ -86,9 +87,26 @@ const NewCMA: React.FC = () => {
           "";
         setDisplayName(String(name || ""));
       } catch {
-        // ignore; we'll just not show a name
+        // ignore
       }
     })();
+  }, []);
+
+  // ✅ stable callbacks so pipeline effect doesn't restart
+  const onRequestId = useCallback((rid: string) => {
+    setRequestId((prev) => (prev === rid ? prev : rid));
+  }, []);
+
+  const onPropertyFacts = useCallback((f: any) => {
+    setFacts((prev: any) => {
+      // avoid useless rerenders if facts are identical-ish
+      try {
+        if (JSON.stringify(prev) === JSON.stringify(f)) return prev;
+      } catch {
+        // ignore stringify issues
+      }
+      return f;
+    });
   }, []);
 
   const topHeader = useMemo(() => {
@@ -132,7 +150,9 @@ const NewCMA: React.FC = () => {
               <Divider />
 
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {requestId && <Chip size="small" label={`Request ID: ${requestId}`} variant="outlined" />}
+                {requestId && (
+                  <Chip size="small" label={`Request ID: ${requestId}`} variant="outlined" />
+                )}
                 <Chip size="small" label="County Records" variant="outlined" />
               </Stack>
 
@@ -147,7 +167,6 @@ const NewCMA: React.FC = () => {
                     {facts?.situs_address || addressString}
                   </Typography>
 
-                  {/* Core facts grid (simple + readable) */}
                   <Box
                     sx={{
                       display: "grid",
@@ -155,12 +174,18 @@ const NewCMA: React.FC = () => {
                       gap: 1.5,
                     }}
                   >
-                    <Fact label="Beds" value={facts?.beds ?? "—"} />
-                    <Fact label="Baths" value={facts?.baths ?? "—"} />
-                    <Fact label="Living sqft" value={facts?.living_sqft ? fmtInt(facts.living_sqft) : "—"} />
-                    <Fact label="Lot sqft" value={facts?.lot_sqft ? fmtInt(facts.lot_sqft) : "—"} />
-                    <Fact label="Year built" value={facts?.year_built ?? "—"} />
-                    <Fact label="Zoning" value={facts?.zoning ?? "—"} />
+                    <Fact label="Beds" value={String(facts?.beds ?? "—")} />
+                    <Fact label="Baths" value={String(facts?.baths ?? "—")} />
+                    <Fact
+                      label="Living sqft"
+                      value={facts?.living_sqft ? fmtInt(facts.living_sqft) : "—"}
+                    />
+                    <Fact
+                      label="Lot sqft"
+                      value={facts?.lot_sqft ? fmtInt(facts.lot_sqft) : "—"}
+                    />
+                    <Fact label="Year built" value={String(facts?.year_built ?? "—")} />
+                    <Fact label="Zoning" value={String(facts?.zoning ?? "—")} />
                   </Box>
 
                   <Typography variant="body2">
@@ -170,30 +195,36 @@ const NewCMA: React.FC = () => {
                   <Typography variant="body2">
                     <strong>Last sale:</strong>{" "}
                     {facts?.last_sale?.date ? String(facts.last_sale.date) : "—"}{" "}
-                    {facts?.last_sale?.price != null ? <>for {fmtMoney(facts.last_sale.price)}</> : null}
+                    {facts?.last_sale?.price != null ? (
+                      <>for {fmtMoney(facts.last_sale.price)}</>
+                    ) : null}
                   </Typography>
 
                   <Typography variant="body2">
                     <strong>Assessed:</strong>{" "}
                     {facts?.assessed?.tax_year ? `Tax year ${facts.assessed.tax_year}` : "—"}
-                    {facts?.assessed?.just_value != null ? <> • Just value {fmtMoney(facts.assessed.just_value)}</> : null}
-                    {facts?.assessed?.assessed_value != null ? <> • Assessed {fmtMoney(facts.assessed.assessed_value)}</> : null}
+                    {facts?.assessed?.just_value != null ? (
+                      <> • Just value {fmtMoney(facts.assessed.just_value)}</>
+                    ) : null}
+                    {facts?.assessed?.assessed_value != null ? (
+                      <> • Assessed {fmtMoney(facts.assessed.assessed_value)}</>
+                    ) : null}
                   </Typography>
                 </Stack>
               </Box>
             </Stack>
           </Paper>
 
-          {/* Data-only pipeline runner (does NOT render UI) */}
+          {/* ✅ Data-only pipeline runner (does NOT render UI) */}
           <CmaPipelineResult
             address={addressString}
             stateHint="FL"
             renderUI={false}
-            onRequestId={(rid) => setRequestId(rid)}
-            onPropertyFacts={(f) => setFacts(f)}
+            onRequestId={onRequestId}
+            onPropertyFacts={onPropertyFacts}
           />
 
-          {/* --- Section B: Inputs list (left question, right answer) --- */}
+          {/* --- Section B: Inputs list --- */}
           <Paper sx={{ p: 3, mt: 3, borderRadius: 3 }}>
             <Stack spacing={2}>
               <Box>
@@ -225,7 +256,9 @@ const NewCMA: React.FC = () => {
                 <QASelectRow
                   label="How would you rate the home’s condition compared to nearby homes?"
                   value={inputs.condition || ""}
-                  onChange={(v) => setInputs((s) => ({ ...s, condition: v as Inputs["condition"] }))}
+                  onChange={(v) =>
+                    setInputs((s) => ({ ...s, condition: v as Inputs["condition"] }))
+                  }
                   options={["Needs updates", "Some updates", "Renovated"]}
                 />
 
@@ -282,7 +315,7 @@ const NewCMA: React.FC = () => {
 
 export default NewCMA;
 
-// ------- small subcomponents (keeps the page readable) -------
+// ------- small subcomponents -------
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
@@ -318,9 +351,7 @@ function QASelectRow({
         gap: 2,
       }}
     >
-      <ListItemText
-        primary={<Typography fontWeight={700}>{label}</Typography>}
-      />
+      <ListItemText primary={<Typography fontWeight={700}>{label}</Typography>} />
       <Select
         size="small"
         value={value}

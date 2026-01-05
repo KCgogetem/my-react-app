@@ -7,7 +7,6 @@ import Box from "@mui/material/Box";
 
 import SideMenu from "./SideMenu";
 import Header from "./Header";
-// import ChartUserByCountry from "./ChartCmaByCounty";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
