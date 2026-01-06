@@ -17,8 +17,7 @@ import { styled } from "@mui/material/styles";
 import ForgotPassword from "../components/ForgotPassword";
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
-import { SitemarkIcon } from "../components/CustomIcons";
-import { signIn, confirmSignIn, signOut } from "aws-amplify/auth";
+import { signIn, confirmSignIn } from "aws-amplify/auth";
 import { useNavigate } from "react-router-dom";
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -32,16 +31,18 @@ const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
     maxWidth: "450px",
   },
-  backgroundColor: "#181818",
-  color: "#fff",
-  boxShadow: "0 5px 15px 0 rgba(0,0,0,0.5), 0 15px 35px -5px rgba(0,0,0,0.8)",
+  // Force a light look for the login card regardless of global color mode
+  backgroundColor: "#ffffff",
+  color: "#000000",
+  boxShadow: theme.shadows[6],
 }));
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
   height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
   minHeight: "100%",
   padding: theme.spacing(2),
-  backgroundColor: "#111",
+  // Light background for the whole login view
+  backgroundColor: "#f5f5f5",
   [theme.breakpoints.up("sm")]: {
     padding: theme.spacing(4),
   },
@@ -51,7 +52,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
     position: "absolute",
     zIndex: -1,
     inset: 0,
-    background: "#111",
+    background: "#f5f5f5",
   },
 }));
 
@@ -129,8 +130,9 @@ export default function Login(props: { disableCustomTheme?: boolean }) {
       }
 
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      setLoginError(err?.message || "Login failed.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Login failed.";
+      setLoginError(message);
     } finally {
       setLoading(false);
     }
@@ -148,8 +150,9 @@ export default function Login(props: { disableCustomTheme?: boolean }) {
       await confirmSignIn({ challengeResponse: newPassword });
       // After confirmSignIn, user is signed in
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      setLoginError(err?.message || "Failed to set new password.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to set new password.";
+      setLoginError(message);
       // If something gets weird, you can reset the flow:
       // await signOut();
       // setNeedsNewPassword(false);

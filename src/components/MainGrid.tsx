@@ -7,7 +7,7 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import Icon from "@mui/material/Icon";
+import HomeWorkIcon from "@mui/icons-material/HomeWork";
 import NewCmaModal from "../components/NewCmaModal";
 import { startCmaPipeline } from "../api/cmaPipeline";
 
@@ -21,7 +21,7 @@ export default function MainGrid({ userName }: { userName?: string }) {
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="false" sx={{ py: 4 }}>
         <Stack spacing={3}>
           <Paper
             elevation={3}
@@ -47,7 +47,7 @@ export default function MainGrid({ userName }: { userName?: string }) {
             <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
               <Button
                 variant="contained"
-                startIcon={<Icon>home_work</Icon>}
+                startIcon={<HomeWorkIcon />}
                 sx={{ textTransform: "none", fontWeight: 600 }}
                 onClick={() => setCmaModalOpen(true)}
               >

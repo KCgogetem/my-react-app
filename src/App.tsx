@@ -1,5 +1,8 @@
 // src/App.tsx
 import "./App.css";
+import "./global.css";
+import { themeConfig, ThemeProvider } from 'src/theme';
+import { defaultSettings, SettingsProvider } from 'src/components/settings';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -17,74 +20,81 @@ import Feedback from "./pages/Feedback";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
+      <SettingsProvider defaultSettings={defaultSettings}>
+        <ThemeProvider
+          modeStorageKey={themeConfig.modeStorageKey}
+          defaultMode={themeConfig.defaultMode}
+        >
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute>
-              <Users />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/new-cma"
-          element={
-            <ProtectedRoute>
-              <NewCMA />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cma-results"
-          element={
-            <ProtectedRoute>
-              <CmaList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cma-results/:requestId"
-          element={
-            <ProtectedRoute>
-              <CmaResults />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/privacy-policy"
-          element={
-            <ProtectedRoute>
-              <PrivacyPolicy />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/feedback"
-          element={
-            <ProtectedRoute>
-              <Feedback />
-            </ProtectedRoute>
-          }
-        />
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/new-cma"
+              element={
+                <ProtectedRoute>
+                  <NewCMA />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cma-results"
+              element={
+                <ProtectedRoute>
+                  <CmaList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cma-results/:requestId"
+              element={
+                <ProtectedRoute>
+                  <CmaResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/privacy-policy"
+              element={
+                <ProtectedRoute>
+                  <PrivacyPolicy />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/feedback"
+              element={
+                <ProtectedRoute>
+                  <Feedback />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Defaults */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+            {/* Defaults */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </ThemeProvider>
+      </SettingsProvider>
     </BrowserRouter>
   );
 }
