@@ -13,6 +13,7 @@ import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { apiFetch } from '../lib/api';
+import cmprLogo from '../assets/cmpr-logo-dark.png';
 
 const drawerWidth = 240;
 
@@ -65,7 +66,7 @@ export default function SideMenu() {
           p: 1.5,
         }}
       >
-        <img src="/cmpr-logo.png" alt="CMPR Logo" style={{ height: 40, width: 'auto' }} />
+        <img src={cmprLogo} alt="CMPR Logo" style={{ height: 40, width: 'auto' }} />
       </Box>
       <Divider />
       <Box

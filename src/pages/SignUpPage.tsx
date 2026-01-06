@@ -14,6 +14,7 @@ import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import AppTheme from "../shared-theme/AppTheme";
 import Link from "@mui/material/Link";
+
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -25,25 +26,27 @@ const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
     maxWidth: "450px",
   },
-  backgroundColor: "#181818",
-  color: "#fff",
-  boxShadow: "0 5px 15px 0 rgba(0,0,0,0.5), 0 15px 35px -5px rgba(0,0,0,0.8)",
+  // Match the light-mode login card styling
+  backgroundColor: "#ffffff",
+  color: "#000000",
+  boxShadow: theme.shadows[6],
 }));
 
 const SignUpContainer = styled(Stack)(({ theme }) => ({
   minHeight: "100vh",
   padding: theme.spacing(2),
-  backgroundColor: "#111",
+  // Light background to align with light-mode login
+  backgroundColor: "#f5f5f5",
   [theme.breakpoints.up("sm")]: {
     padding: theme.spacing(4),
   },
-  '&::before': {
+  "&::before": {
     content: '""',
-    display: 'block',
-    position: 'absolute',
+    display: "block",
+    position: "absolute",
     zIndex: -1,
     inset: 0,
-    background: '#111',
+    background: "#f5f5f5",
   },
 }));
 
@@ -77,8 +80,9 @@ export default function SignUpPage() {
         // some configs can auto-confirm/auto-sign-in; send them to login
         navigate("/login", { replace: true });
       }
-    } catch (err: any) {
-      setError(err?.message ?? "Sign up failed.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Sign up failed.";
+      setError(message);
     } finally {
       setBusy(false);
     }
@@ -96,8 +100,9 @@ export default function SignUpPage() {
 
       // after confirmation, send them to login (or auto sign-in if you enable it later)
       navigate("/login", { replace: true, state: { email } });
-    } catch (err: any) {
-      setError(err?.message ?? "Confirmation failed.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Confirmation failed.";
+      setError(message);
     } finally {
       setBusy(false);
     }
