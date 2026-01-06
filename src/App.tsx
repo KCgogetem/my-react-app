@@ -19,12 +19,12 @@ import Feedback from "./pages/Feedback";
 
 function App() {
   return (
-    <SettingsProvider defaultSettings={defaultSettings}>
-      <ThemeProvider
-        modeStorageKey={themeConfig.modeStorageKey}
-        defaultMode={themeConfig.defaultMode}
-      >
-        <BrowserRouter>
+    <BrowserRouter>
+      <SettingsProvider defaultSettings={defaultSettings}>
+        <ThemeProvider
+          modeStorageKey={themeConfig.modeStorageKey}
+          defaultMode={themeConfig.defaultMode}
+        >
           <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
@@ -93,9 +93,9 @@ function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </SettingsProvider>
+        </ThemeProvider>
+      </SettingsProvider>
+    </BrowserRouter>
   );
 }
 
