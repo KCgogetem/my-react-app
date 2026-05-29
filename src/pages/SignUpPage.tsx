@@ -1,3 +1,19 @@
+// =============================================================================
+// SIGN UP PAGE
+// =============================================================================
+// Self-service account creation. Two steps handled on the same page:
+//
+//   Step 1 — SIGN_UP:
+//     User enters email + password → signUp() → Cognito sends a verification
+//     code to their email → we switch to the confirmation form.
+//
+//   Step 2 — CONFIRM:
+//     User enters the 6-digit code from their email → confirmSignUp() →
+//     redirect to /login so they can sign in with their new account.
+//
+// Note: auto sign-in after confirmation is not enabled. Users must log in
+// separately after confirming.
+// =============================================================================
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -50,13 +66,15 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 export default function SignUpPage() {
   const navigate = useNavigate();
 
+  // step controls which form is shown: email+password entry or code confirmation
   const [step, setStep] = useState<"SIGN_UP" | "CONFIRM">("SIGN_UP");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState("");   // verification code from Cognito email
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false); // disables submit button during async calls
 
+  // Step 1: create the Cognito account and wait for email verification
   const onSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -70,11 +88,10 @@ export default function SignUpPage() {
         },
       });
 
-      // Amplify v6 returns nextStep telling you what to do next
       if (res.nextStep.signUpStep === "CONFIRM_SIGN_UP") {
-        setStep("CONFIRM");
+        setStep("CONFIRM"); // show the code entry form
       } else {
-        // some configs can auto-confirm/auto-sign-in; send them to login
+        // Cognito pool is configured for auto-confirm → skip straight to login
         navigate("/login", { replace: true });
       }
     } catch (err: any) {
@@ -84,6 +101,7 @@ export default function SignUpPage() {
     }
   };
 
+  // Step 2: verify the code Cognito emailed, then send the user to login
   const onConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -94,7 +112,7 @@ export default function SignUpPage() {
         confirmationCode: code,
       });
 
-      // after confirmation, send them to login (or auto sign-in if you enable it later)
+      // Pass email in router state so Login can pre-fill the email field
       navigate("/login", { replace: true, state: { email } });
     } catch (err: any) {
       setError(err?.message ?? "Confirmation failed.");
